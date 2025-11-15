@@ -1,357 +1,258 @@
 # agents/lesson_bot.py
+# ================================================
+# GeneLingua Lesson Bot – FINAL, BULLETPROOF
+# Author: @Yusufrozimemet (NL) – November 15, 2025
+# Time: 03:40 PM CET
+# FIXED: re.Match → .group(1), Gemma parsing, dedupe, output
+# ================================================
+
 import re
-from transformers import pipeline
-import torch
+import os
+import requests
+from typing import Optional, List, Dict
+from dotenv import load_dotenv
 
-# TINY MODEL: 1.5B → streams, < 200 MB disk, ~3 GB RAM
-generator = pipeline(
-    "text-generation",
-    model="Qwen/Qwen2.5-Coder-1.5B-Instruct",  # ← 1.5B, not 7B
-    device_map="auto",
-    dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-    max_new_tokens=150,  # Reduced for faster generation
-    do_sample=False,
-    trust_remote_code=True,
-)
+load_dotenv()
+
+# === CONFIG ===
+DEFAULT_MODEL = "google/gemma-2-9b-it"
+FALLBACK_MODEL = "deepseek-ai/DeepSeek-R1:together"
+HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
 
 
-def extract_contextual_vocabulary(daily_log: str, target_language: str):
-    """Extract and translate key terms from daily log"""
-    import re
-
-    # Enhanced vocabulary mapping based on common terms
-    vocab_maps = {
-        "dutch": {
-            "job interview": "sollicitatie – job interview",
-            "interview": "sollicitatie – job interview",
-            "full stack": "full-stack – full stack",
-            "developer": "ontwikkelaar – developer",
-            "development": "ontwikkeling – development",
-            "python": "Python – Python",
-            "programming": "programmeren – programming",
-            "code": "code – code",
-            "software": "software – software",
-            "application": "applicatie – application",
-            "database": "database – database",
-            "frontend": "frontend – frontend",
-            "backend": "backend – backend",
-            "framework": "framework – framework",
-            "api": "API – API",
-            "javascript": "JavaScript – JavaScript",
-            "react": "React – React",
-            "node": "Node.js – Node.js",
-            "experience": "ervaring – experience",
-            "skills": "vaardigheden – skills",
-            "project": "project – project",
-            "team": "team – team",
-            "company": "bedrijf – company",
-            "salary": "salaris – salary",
-            "position": "positie – position"
-        },
-        "japanese": {
-            "job interview": "面接 (めんせつ) – job interview",
-            "interview": "面接 (めんせつ) – interview",
-            "full stack": "フルスタック – full stack",
-            "developer": "開発者 (かいはつしゃ) – developer",
-            "development": "開発 (かいはつ) – development",
-            "python": "Python (パイソン) – Python",
-            "programming": "プログラミング – programming",
-            "code": "コード – code",
-            "software": "ソフトウェア – software",
-            "application": "アプリケーション – application",
-            "database": "データベース – database",
-            "frontend": "フロントエンド – frontend",
-            "backend": "バックエンド – backend",
-            "framework": "フレームワーク – framework",
-            "api": "API (エーピーアイ) – API",
-            "javascript": "JavaScript (ジャバスクリプト) – JavaScript",
-            "react": "React (リアクト) – React",
-            "experience": "経験 (けいけん) – experience",
-            "skills": "スキル – skills",
-            "project": "プロジェクト – project",
-            "team": "チーム – team",
-            "company": "会社 (かいしゃ) – company"
-        },
-        "chinese": {
-            "job interview": "面试 (miànshì) – job interview",
-            "interview": "面试 (miànshì) – interview",
-            "full stack": "全栈 (quánzhàn) – full stack",
-            "developer": "开发者 (kāifāzhě) – developer",
-            "development": "开发 (kāifā) – development",
-            "python": "Python – Python",
-            "programming": "编程 (biānchéng) – programming",
-            "code": "代码 (dàimǎ) – code",
-            "software": "软件 (ruǎnjiàn) – software",
-            "application": "应用程序 (yìngyòng chéngxù) – application",
-            "database": "数据库 (shùjùkù) – database",
-            "frontend": "前端 (qiánduān) – frontend",
-            "backend": "后端 (hòuduān) – backend",
-            "framework": "框架 (kuàngjià) – framework",
-            "api": "API – API",
-            "javascript": "JavaScript – JavaScript",
-            "react": "React – React",
-            "experience": "经验 (jīngyàn) – experience",
-            "skills": "技能 (jìnéng) – skills",
-            "project": "项目 (xiàngmù) – project",
-            "team": "团队 (tuánduì) – team",
-            "company": "公司 (gōngsī) – company"
-        }
-    }
-
-    vocab_map = vocab_maps.get(target_language, vocab_maps["japanese"])
-    found_vocab = []
-
-    daily_log_lower = daily_log.lower()
-    for key, translation in vocab_map.items():
-        if key in daily_log_lower:
-            found_vocab.append(translation)
-            print(f"Found: '{key}' -> {translation}")
-
-    return found_vocab
-
-
-def generate_contextual_sentences(daily_log: str, target_language: str):
-    """Use AI to generate contextual sentences based on daily log content"""
-
-    print(f"🤖 Generating AI sentences for: '{daily_log}' in {target_language}")
-
+def generate_with_api(messages: List[Dict], max_tokens: int = 300, model: str = DEFAULT_MODEL) -> Optional[str]:
     try:
-        # Create a focused prompt for sentence generation
-        if target_language.lower() == "dutch":
-            prompt = f"""Generate 8 Dutch sentences about these activities: "{daily_log}"
+        print(f"Using HF API ({model})...")
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.3,
+            "top_p": 0.9,
+            "do_sample": True,
+            "stop": None
+        }
 
-Write sentences in Dutch that describe what someone did based on these activities. Make them personal and specific to the activities mentioned.
-
-Activities: {daily_log}
-
-Dutch sentences:
-1. Vandaag had ik"""
-
-        elif target_language.lower() == "japanese":
-            prompt = f"""Generate 8 Japanese sentences about these activities: "{daily_log}"
-
-Write sentences in Japanese that describe what someone did based on these activities.
-
-Activities: {daily_log}
-
-Japanese sentences:
-1. 今日は"""
-
-        else:  # Chinese
-            prompt = f"""Generate 8 Chinese sentences about these activities: "{daily_log}"
-
-Write sentences in Chinese that describe what someone did based on these activities.
-
-Activities: {daily_log}
-
-Chinese sentences:
-1. 今天我"""
-
-        # Generate with AI (faster settings for CPU)
-        response = generator(
-            prompt,
-            max_new_tokens=200,
-            do_sample=False,
-            pad_token_id=generator.tokenizer.eos_token_id
-        )[0]['generated_text']
-
-        # Extract generated content
-        if prompt in response:
-            ai_content = response.split(prompt)[-1].strip()
+        headers = {"Content-Type": "application/json"}
+        token = os.getenv("HF_TOKEN")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+            print("Using authenticated token")
         else:
-            ai_content = response.strip()
+            print("No HF_TOKEN – anonymous mode")
 
-        print(f"AI sentence generation: {ai_content[:200]}...")
+        response = requests.post(
+            HF_API_URL, json=payload, headers=headers, timeout=40)
 
-        # Extract sentences from the response
-        sentences = []
-        lines = ai_content.split('\n')
+        if response.status_code == 503:
+            print("Model loading… retry in 15s")
+            import time
+            time.sleep(15)
+            response = requests.post(
+                HF_API_URL, json=payload, headers=headers, timeout=40)
 
-        for line in lines:
-            line = line.strip()
-            # Remove numbering like "1.", "2.", etc.
-            if line and not line.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.')):
-                # Remove any remaining numbering patterns
-                import re
-                clean_line = re.sub(r'^\d+\.\s*', '', line)
-                # Ensure it's a meaningful sentence
-                if clean_line and len(clean_line) > 5:
-                    sentences.append(clean_line)
-            elif line.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.')):
-                # Extract sentence after numbering
-                clean_line = line[2:].strip()
-                if clean_line and len(clean_line) > 5:
-                    sentences.append(clean_line)
+        if response.status_code in (401, 403):
+            headers.pop("Authorization", None)
+            response = requests.post(
+                HF_API_URL, json=payload, headers=headers, timeout=40)
 
-        if len(sentences) >= 3:
-            print(f"✅ AI generated {len(sentences)} contextual sentences")
-            return sentences[:8]
+        if response.status_code != 200:
+            print(f"API error {response.status_code}: {response.text[:150]}")
+            return None
+
+        text = response.json()["choices"][0]["message"]["content"].strip()
+        print(f"API success ({len(text)} chars)")
+        return text
 
     except Exception as e:
-        print(f"AI sentence generation failed: {e}")
-
-    # Minimal fallback - just return empty list to force the main function to use AI generation
-    print("⚠️ Falling back to main AI generation")
-    return []
+        print(f"API exception: {e}")
+        return None
 
 
-def run_lesson_bot(daily_log: str, target_language: str = "japanese"):
-    """
-    Generate personalized vocabulary and sentences based on user's daily activities.
-    Uses AI to create contextual content from the daily log.
-    """
-    import random
-    import re
-    import json
+def try_generate(system: str, user: str, max_tokens: int = 300) -> Optional[str]:
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user}
+    ]
 
-    print(f"Processing daily log: '{daily_log}' for {target_language}")
+    raw = generate_with_api(messages, max_tokens, DEFAULT_MODEL)
+    if raw:
+        return raw
 
-    # First, try AI generation for contextual content
-    if daily_log and daily_log.strip():
-        try:
-            print(
-                f"🤖 Starting AI generation for: '{daily_log}' in {target_language}")
+    print("Gemma failed → trying DeepSeek")
+    raw = generate_with_api(messages, max_tokens, FALLBACK_MODEL)
+    if raw and "<think>" in raw:
+        raw = raw.split("</think>")[-1].strip()
+    return raw
 
-            # Create contextual vocabulary manually based on keywords
-            contextual_vocab = extract_contextual_vocabulary(
-                daily_log, target_language)
-            contextual_sentences = generate_contextual_sentences(
-                daily_log, target_language)
 
-            if len(contextual_vocab) >= 5 and len(contextual_sentences) >= 3:
-                print(
-                    f"✅ Generated contextual content: {len(contextual_vocab)} words, {len(contextual_sentences)} sentences")
-                return {
-                    "words": contextual_vocab[:15],
-                    "sentences": contextual_sentences[:8],
-                    "language": target_language
-                }
+def extract_lines_with_pattern(text: str, pattern: str) -> List[str]:
+    """Extract .group(1) from regex matches."""
+    if not text:
+        return []
+    return [m.group(1).strip() for m in re.finditer(pattern, text, re.MULTILINE) if m.group(1)]
 
-            # Fallback to AI generation if contextual extraction didn't work well
-            lang_example = {
-                "dutch": "Dutch with English translations",
-                "japanese": "Japanese with romaji and English",
-                "chinese": "Chinese with pinyin and English"
-            }.get(target_language, "the target language")
 
-            prompt = f"""Based on activities: "{daily_log}"
-Create {target_language} vocabulary and sentences for these specific activities.
-Make vocabulary relevant to: job interviews, programming, development work.
+# ----------------------------------------------------------------------
+# VOCABULARY
+# ----------------------------------------------------------------------
+def extract_contextual_vocabulary(daily_log: str, target_language: str) -> List[str]:
+    log = daily_log.strip()
 
-Format: word – translation
+    system_prompt = (
+        "You are a strict language formatter. "
+        "Output ONLY the list. "
+        "NO reasoning, NO intro, NO numbers. "
+        "Format: 'target_word – english_translation' per line."
+    )
 
-Generate 10 relevant vocabulary words and 5 sentences in {target_language}."""
+    user_prompts = {
+        "dutch": f"List 10 Dutch words related to: {log}. Format: 'dutch – english'. Start now.",
+        "japanese": f"List 10 Japanese words related to: {log}. Format: '日本語 (hiragana) – English'. Start now.",
+        "chinese": f"List 10 Chinese words related to: {log}. Format: '中文 (pinyin) – English'. Start now."
+    }
 
-            print(f"🔄 Using AI model for generation...")
+    raw = try_generate(system_prompt, user_prompts.get(
+        target_language.lower(), user_prompts["dutch"]), 400)
+    if not raw:
+        return []
 
-            # Generate with AI (faster settings for CPU)
-            response = generator(
-                prompt,
-                max_new_tokens=300,
-                do_sample=False,
-                pad_token_id=generator.tokenizer.eos_token_id
-            )[0]['generated_text']
+    print(f"DEBUG Vocab Raw: {raw[:500]}...")
 
-            # Extract the generated content after the prompt
-            if prompt in response:
-                ai_content = response.split(prompt)[-1].strip()
-            else:
-                ai_content = response.strip()
+    # Try numbered lines
+    lines = extract_lines_with_pattern(
+        raw, r"^\d+[\.\)]\s*(.+?)(?=\n\d+[\.\)]|\n*$)")
+    if not lines:
+        lines = [line.strip() for line in raw.split('\n') if ' – ' in line]
 
-            print(f"AI raw response: {ai_content[:200]}...")
+    vocab = []
+    seen = set()
 
-            # Try to extract JSON from the response
-            if '{' in ai_content and '}' in ai_content:
-                # Find the JSON part
-                json_start = ai_content.find('{')
-                json_part = ai_content[json_start:]
+    for line in lines:
+        clean = re.sub(r"^\d+[\.\)\]\:\-\*•]\s*", "", line).strip()
+        clean = re.sub(r"\s*[-–—:]\s*", " – ", clean)
 
-                # Find the end of JSON
-                brace_count = 0
-                json_end = json_start
-                for i, char in enumerate(json_part):
-                    if char == '{':
-                        brace_count += 1
-                    elif char == '}':
-                        brace_count -= 1
-                        if brace_count == 0:
-                            json_end = i + 1
-                            break
+        if " – " not in clean:
+            continue
+        parts = [p.strip() for p in clean.split(" – ", 1)]
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            continue
 
-                json_content = json_part[:json_end]
-                print(f"Extracted JSON: {json_content}")
+        key = parts[0].lower()
+        if key in seen:
+            continue
+        seen.add(key)
 
-                try:
-                    ai_lesson = json.loads(json_content)
-                    if isinstance(ai_lesson, dict) and 'words' in ai_lesson and 'sentences' in ai_lesson:
-                        # Validate the content
-                        words = ai_lesson['words'][:15]  # Limit to 15
-                        sentences = ai_lesson['sentences'][:8]  # Limit to 8
+        if target_language.lower() == "dutch" and not re.search(r"[a-z]", parts[0], re.I):
+            continue
+        if target_language.lower() == "japanese" and not re.search(r"[\u3040-\u9FFF]", parts[0]):
+            continue
+        if target_language.lower() == "chinese" and not re.search(r"[\u4E00-\u9FFF]", parts[0]):
+            continue
 
-                        if len(words) >= 5 and len(sentences) >= 3:  # Minimum viable content
-                            print(
-                                f"✅ AI generated: {len(words)} words, {len(sentences)} sentences in {target_language}")
-                            return {
-                                "words": words,
-                                "sentences": sentences,
-                                "language": target_language
-                            }
-                except json.JSONDecodeError as e:
-                    print(f"JSON decode error: {e}")
+        vocab.append(f"{parts[0]} – {parts[1]}")
 
-        except Exception as e:
-            print(f"AI generation failed: {e}")
+    print(f"Found {len(vocab)} vocabulary words")
+    return vocab[:15]
 
-        # Try simpler AI generation as final attempt
-        print("🔄 Attempting simpler AI generation...")
-        try:
-            simple_prompt = f"""Create {target_language} vocabulary for: {daily_log}
 
-Generate 10 vocabulary terms related to these activities.
-Create 6 sentences in {target_language} about these activities.
+# ----------------------------------------------------------------------
+# SENTENCES
+# ----------------------------------------------------------------------
+def generate_contextual_sentences(daily_log: str, target_language: str) -> List[str]:
+    log = daily_log.strip()
 
-Focus on the specific activities mentioned."""
+    system_prompt = (
+        "You are a language tutor. "
+        "Write exactly 6 short sentences in the target language. "
+        "Number them 1-6. One per line. NO English, NO explanation."
+    )
 
-            response = generator(
-                simple_prompt,
-                max_new_tokens=250,
-                do_sample=False,
-                pad_token_id=generator.tokenizer.eos_token_id
-            )[0]['generated_text']
+    user_prompts = {
+        "dutch": f"Write 6 short Dutch sentences about: {log}. Number 1-6.",
+        "japanese": f"Write 6 short Japanese sentences about: {log}. Number 1-6.",
+        "chinese": f"Write 6 short Chinese sentences about: {log}. Number 1-6."
+    }
 
-            # Extract content
-            if simple_prompt in response:
-                ai_content = response.split(simple_prompt)[-1].strip()
-            else:
-                ai_content = response.strip()
+    raw = try_generate(system_prompt, user_prompts.get(
+        target_language.lower(), user_prompts["dutch"]), 450)
+    if not raw:
+        return []
 
-            print(f"Simple AI response: {ai_content[:300]}...")
+    print(f"DEBUG Sentences Raw: {raw[:500]}...")
 
-            # Parse the response more flexibly
-            lines = ai_content.split('\n')
-            words = []
-            sentences = []
+    matches = extract_lines_with_pattern(
+        raw, r"^\d+[\.\)]\s*(.+?)(?=\n\d+[\.\)]|\n*$)")
+    sentences = []
+    seen = set()
 
-            for line in lines:
-                line = line.strip()
-                if '–' in line or '-' in line:  # Likely vocabulary
-                    words.append(line)
-                elif len(line) > 10 and line.endswith('.'):  # Likely sentence
-                    sentences.append(line)
+    for s in matches:
+        if len(s) < 10 or any(kw in s.lower() for kw in ["here", "sentence", "write", "reason", "english"]):
+            continue
+        if s not in seen:
+            seen.add(s)
+            sentences.append(s)
 
-            if len(words) >= 3 and len(sentences) >= 2:
-                print(
-                    f"✅ Simple AI generated: {len(words)} words, {len(sentences)} sentences")
-                return {
-                    "words": words[:15],
-                    "sentences": sentences[:8],
-                    "language": target_language
-                }
+    print(f"Generated {len(sentences)} sentences")
+    return sentences[:8]
 
-        except Exception as e:
-            print(f"Simple AI generation also failed: {e}")
 
-    # If AI generation fails completely, raise an error instead of falling back to hardcoded content
-    print("❌ All AI generation methods failed!")
-    raise Exception(
-        f"AI generation failed for activities: '{daily_log}'. Please try again with different activities or check your model setup.")
+# ----------------------------------------------------------------------
+# FALLBACK & RUN
+# ----------------------------------------------------------------------
+def generate_fallback_content(daily_log: str, target_language: str) -> Dict:
+    first = daily_log.split(",")[0].strip().split()[-1]
+    if target_language.lower() == "dutch":
+        return {
+            "words": [
+                "vandaag – today", "lab – lab", "meeting – meeting",
+                "supervisor – supervisor", "experiment – experiment"
+            ],
+            "sentences": [
+                f"Vandaag werkte ik aan {first}.",
+                "Het lab was druk.",
+                "De meeting was nuttig.",
+                "Mijn supervisor gaf feedback.",
+                "Morgen doen we een nieuw experiment."
+            ]
+        }
+    return {"words": [], "sentences": []}
+
+
+def run_lesson_bot(daily_log: str, target_language: str = "dutch") -> Dict:
+    print(f"\n{'='*50}")
+    print(f"Processing: '{daily_log}' → {target_language.upper()}")
+    print(f"{'='*50}\n")
+
+    if not daily_log.strip():
+        raise ValueError("Empty log")
+
+    vocab = extract_contextual_vocabulary(daily_log, target_language)
+    sentences = generate_contextual_sentences(daily_log, target_language)
+
+    if len(vocab) < 3 or len(sentences) < 3:
+        print("Using fallback")
+        fb = generate_fallback_content(daily_log, target_language)
+        vocab = vocab or fb["words"]
+        sentences = sentences or fb["sentences"]
+
+    # Dedupe properly
+    vocab = list(dict.fromkeys(vocab))[:15]
+    sentences = list(dict.fromkeys(sentences))[:8]
+
+    result = {"words": vocab, "sentences": sentences,
+              "language": target_language}
+    print(f"\nFINAL: {len(vocab)} words, {len(sentences)} sentences")
+    return result
+
+
+# === TEST ===
+if __name__ == "__main__":
+    result = run_lesson_bot("python, developer, job interview", "dutch")
+    print("\nRESULT:")
+    print("Words:")
+    for w in result["words"]:
+        print(f"  • {w}")
+    print("\nSentences:")
+    for s in result["sentences"]:
+        print(f"  • {s}")

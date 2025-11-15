@@ -233,7 +233,7 @@ def process_user(user_id, dna_file, ancestry, mbti, target_language, log_text, p
                 logger.info(
                     f"Lesson bot completed - generated {len(lesson.get('words', []))} words and {len(lesson.get('sentences', []))} sentences in {target_language}")
             except Exception as lesson_error:
-                logger.error(f"Lesson bot specifically failed: {lesson_error}")
+                logger.error(f"Lesson bot specifically failed: {lesson_error}", exc_info=True)
                 # Language-specific fallback content
                 fallback_lessons = {
                     "japanese": {
@@ -251,6 +251,7 @@ def process_user(user_id, dna_file, ancestry, mbti, target_language, log_text, p
                 }
                 lesson = fallback_lessons.get(
                     target_language, fallback_lessons["japanese"])
+                lesson["language"] = target_language
             logger.info("AI agents completed")
         except Exception as e:
             logger.error(f"AI agent failed: {e}", exc_info=True)
@@ -273,11 +274,12 @@ def process_user(user_id, dna_file, ancestry, mbti, target_language, log_text, p
                     "sentences": ["今天我学习了中文。", "谢谢。", "你好，你好吗？"]
                 }
             }
-            lesson = fallback_lessons.get(
+            lesson_data = fallback_lessons.get(
                 target_language, fallback_lessons["japanese"])
             lesson = {
-                "words": lesson["words"],
-                "sentences": lesson["sentences"]
+                "words": lesson_data["words"],
+                "sentences": lesson_data["sentences"],
+                "language": target_language
             }
 
         # === 4. Generate Outputs ===

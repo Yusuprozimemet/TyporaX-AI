@@ -2,7 +2,6 @@
 # Core UI
 gradio>=4.50
 fastapi
-
 # ──────────────────────────────────────────────────────────────
 # LLM / generation
 transformers>=4.45
@@ -33,6 +32,8 @@ numpy
 
 # ──────────────────────────────────────────────────────────────
 # Misc utilities
+requests
+python-dotenv
 pytesseract
 opencv-python
 pillow
