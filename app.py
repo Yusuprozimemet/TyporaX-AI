@@ -1,7 +1,10 @@
 # app.py
+from fastapi.responses import FileResponse
+from fastapi import FastAPI
 import gradio as gr
 import os
 import json
+from datetime import datetime
 from dna_engine import DNAPolygenicEngine
 from agents.calibrator import run_calibrator
 from agents.tracker import run_tracker
@@ -19,20 +22,131 @@ ensure_dir("data/users")
 
 engine = DNAPolygenicEngine()
 
+# === User Profile Management ===
 
-def process_user(user_id, dna_file, ancestry, mbti, log_text, photo, voice_file):
+
+def save_user_profile(user_id, ancestry, mbti, target_language):
+    """Save user preferences to avoid re-entering each time"""
+    try:
+        user_dir = f"data/users/{user_id}"
+        os.makedirs(user_dir, exist_ok=True)
+
+        profile = {
+            "user_id": user_id,
+            "ancestry": ancestry,
+            "mbti": mbti,
+            "target_language": target_language,
+            "last_updated": str(datetime.now())
+        }
+
+        with open(f"{user_dir}/profile.json", "w", encoding="utf-8") as f:
+            json.dump(profile, f, indent=2)
+
+        logger.info(f"User profile saved for {user_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to save profile: {e}")
+        return False
+
+
+def load_user_profile(user_id):
+    """Load user preferences if they exist"""
+    try:
+        profile_path = f"data/users/{user_id}/profile.json"
+        if os.path.exists(profile_path):
+            with open(profile_path, "r", encoding="utf-8") as f:
+                profile = json.load(f)
+            logger.info(f"User profile loaded for {user_id}")
+            return profile
+    except Exception as e:
+        logger.error(f"Failed to load profile: {e}")
+
+    # Return defaults if no profile exists
+    return {
+        "user_id": user_id,
+        "ancestry": "EAS",
+        "mbti": "INTJ",
+        "target_language": "japanese"
+    }
+
+
+def check_dna_file_exists(user_id):
+    """Check if DNA file already exists for user"""
+    return os.path.exists(f"data/users/{user_id}/genome.txt")
+
+
+def load_profile_on_name_change(user_id):
+    """Load user profile when name is entered and update UI components"""
+    if not user_id or not user_id.strip():
+        return "EAS", "INTJ", "japanese", None, "Enter your name to load saved profile"
+
+    profile = load_user_profile(user_id.strip())
+    dna_exists = check_dna_file_exists(user_id.strip())
+
+    status_msg = f"✅ Profile loaded for {user_id}"
+    if dna_exists:
+        status_msg += " | DNA file found - no need to re-upload"
+    else:
+        status_msg += " | Please upload your DNA file"
+
+    return (
+        profile["ancestry"],
+        profile["mbti"],
+        profile["target_language"],
+        None,  # Don't try to set the DNA file component
+        status_msg
+    )
+
+
+def load_profile_on_name_change(user_id):
+    """Load user profile when name is entered and update UI components"""
+    if not user_id or not user_id.strip():
+        return (
+            "EAS",  # Default ancestry
+            "INTJ",  # Default MBTI
+            "japanese",  # Default language
+            "Enter your name to load saved settings"
+        )
+
+    # Load the user profile
+    profile = load_user_profile(user_id.strip())
+    dna_exists = check_dna_file_exists(user_id.strip())
+
+    status_msg = f"✅ Profile loaded for {user_id.strip()}"
+    if dna_exists:
+        status_msg += " | DNA file found - no need to re-upload"
+    else:
+        status_msg += " | Please upload your DNA file"
+
+    return (
+        profile["ancestry"],
+        profile["mbti"],
+        profile["target_language"],
+        status_msg
+    )
+
+
+def process_user(user_id, dna_file, ancestry, mbti, target_language, log_text, photo, voice_file):
     user_id = user_id.strip() or "unknown"
     logger.info(
-        f"Starting processing for user: {user_id} | Ancestry: {ancestry} | MBTI: {mbti}")
+        f"Starting processing for user: {user_id} | Ancestry: {ancestry} | MBTI: {mbti} | Language: {target_language}")
 
     user_dir = ensure_dir(f"data/users/{user_id}")
+
+    # Save user profile for future sessions
+    save_user_profile(user_id, ancestry, mbti, target_language)
 
     try:
         # === 1. DNA Processing ===
         dna_report = {"pgs_results": {"percentile": 50, "z_score": 0.0}}
         plot_path = None  # Initialize plot_path
 
+        # Check if DNA file already exists (for returning users)
+        existing_dna_path = f"{user_dir}/genome.txt"
+        dna_exists = os.path.exists(existing_dna_path)
+
         if dna_file:
+            # New DNA file uploaded - save it
             try:
                 path = f"{user_dir}/genome.txt"
 
@@ -49,7 +163,7 @@ def process_user(user_id, dna_file, ancestry, mbti, log_text, photo, voice_file)
                     with open(path, 'w', encoding='utf-8') as f:
                         f.write(str(dna_file))
 
-                logger.info(f"DNA file saved: {path}")
+                logger.info(f"New DNA file saved: {path}")
 
                 dna_report = engine.generate_report(path, ancestry)
                 logger.info(
@@ -66,8 +180,29 @@ def process_user(user_id, dna_file, ancestry, mbti, log_text, photo, voice_file)
                 dna_report = {"pgs_results": {
                     "percentile": 50, "z_score": 0.0}}
                 plot_path = None
+        elif dna_exists:
+            # Use existing DNA file for returning user
+            try:
+                logger.info(f"Using existing DNA file for {user_id}")
+                dna_report = engine.generate_report(
+                    existing_dna_path, ancestry)
+                logger.info(
+                    f"DNA report generated from existing file | Percentile: {dna_report['pgs_results']['percentile']}")
+
+                plot_path = generate_dna_plots(dna_report, user_dir)
+                if plot_path:
+                    logger.debug(f"DNA plot generated: {plot_path}")
+                else:
+                    logger.warning("DNA plot generation failed")
+                    plot_path = None
+            except Exception as e:
+                logger.error(f"DNA processing failed: {e}", exc_info=True)
+                dna_report = {"pgs_results": {
+                    "percentile": 50, "z_score": 0.0}}
+                plot_path = None
         else:
-            logger.info("No DNA file uploaded — using default score")
+            logger.info(
+                "No DNA file uploaded and none found — using default score")
 
         # === 2. Save MBTI + Log ===
         try:
@@ -90,23 +225,32 @@ def process_user(user_id, dna_file, ancestry, mbti, log_text, photo, voice_file)
             progress = run_tracker(user_dir)
             logger.info("Tracker completed")
 
-            logger.info("Running lesson bot agent (this may take a while)...")
+            logger.info(
+                f"Running lesson bot agent for {target_language} (this may take a while)...")
             try:
-                lesson = run_lesson_bot(log_text or "No log provided")
+                lesson = run_lesson_bot(
+                    log_text or "No log provided", target_language)
                 logger.info(
-                    f"Lesson bot completed - generated {len(lesson.get('words', []))} words and {len(lesson.get('sentences', []))} sentences")
+                    f"Lesson bot completed - generated {len(lesson.get('words', []))} words and {len(lesson.get('sentences', []))} sentences in {target_language}")
             except Exception as lesson_error:
                 logger.error(f"Lesson bot specifically failed: {lesson_error}")
-                lesson = {
-                    "words": [
-                        "今日 (きょう) – today",
-                        "勉強 (べんきょう) – study",
-                        "日本語 (にほんご) – Japanese"
-                    ],
-                    "sentences": [
-                        "今日は日本語を勉強しました。"
-                    ]
+                # Language-specific fallback content
+                fallback_lessons = {
+                    "japanese": {
+                        "words": ["今日 (きょう) – today", "勉強 (べんきょう) – study", "日本語 (にほんご) – Japanese"],
+                        "sentences": ["今日は日本語を勉強しました。"]
+                    },
+                    "dutch": {
+                        "words": ["vandaag – today", "studeren – study", "Nederlands – Dutch"],
+                        "sentences": ["Vandaag heb ik Nederlands gestudeerd."]
+                    },
+                    "chinese": {
+                        "words": ["今天 (jīntiān) – today", "学习 (xuéxí) – study", "中文 (zhōngwén) – Chinese"],
+                        "sentences": ["今天我学习了中文。"]
+                    }
                 }
+                lesson = fallback_lessons.get(
+                    target_language, fallback_lessons["japanese"])
             logger.info("AI agents completed")
         except Exception as e:
             logger.error(f"AI agent failed: {e}", exc_info=True)
@@ -114,26 +258,33 @@ def process_user(user_id, dna_file, ancestry, mbti, log_text, photo, voice_file)
                 "60min study", "30min review"]}
             progress = {"graph": None, "b2_months": 18,
                         "vocab": 150, "cefr": "A1"}
-            # Provide meaningful fallback lesson content
+            # Provide meaningful fallback lesson content based on target language
+            fallback_lessons = {
+                "japanese": {
+                    "words": ["今日 (きょう) – today", "勉強 (べんきょう) – study", "日本語 (にほんご) – Japanese", "ありがとう (ありがとう) – thank you", "こんにちは (こんにちは) – hello"],
+                    "sentences": ["今日は日本語を勉強しました。", "ありがとうございます。", "こんにちは、元気ですか？"]
+                },
+                "dutch": {
+                    "words": ["vandaag – today", "studeren – study", "Nederlands – Dutch", "dank je – thank you", "hallo – hello"],
+                    "sentences": ["Vandaag heb ik Nederlands gestudeerd.", "Dank je wel.", "Hallo, hoe gaat het?"]
+                },
+                "chinese": {
+                    "words": ["今天 (jīntiān) – today", "学习 (xuéxí) – study", "中文 (zhōngwén) – Chinese", "谢谢 (xièxiè) – thank you", "你好 (nǐ hǎo) – hello"],
+                    "sentences": ["今天我学习了中文。", "谢谢。", "你好，你好吗？"]
+                }
+            }
+            lesson = fallback_lessons.get(
+                target_language, fallback_lessons["japanese"])
             lesson = {
-                "words": [
-                    "今日 (きょう) – today",
-                    "勉強 (べんきょう) – study",
-                    "日本語 (にほんご) – Japanese",
-                    "ありがとう (ありがとう) – thank you",
-                    "こんにちは (こんにちは) – hello"
-                ],
-                "sentences": [
-                    "今日は日本語を勉強しました。",
-                    "ありがとうございます。",
-                    "こんにちは、元気ですか？"
-                ]
+                "words": lesson["words"],
+                "sentences": lesson["sentences"]
             }
 
         # === 4. Generate Outputs ===
         pdf_path = generate_pdf(dna_report, method, progress, lesson, user_id)
         anki_path = export_anki(lesson, user_id)
-        audio_path = generate_audio(lesson["sentences"], user_id)
+        audio_path = generate_audio(
+            lesson["sentences"], user_id, target_language)
 
         logger.info(
             f"Outputs generated | PDF: {os.path.exists(pdf_path)} | Anki: {os.path.exists(anki_path)}")
@@ -173,6 +324,23 @@ with gr.Blocks(
     .gradio-container {
         max-width: 1200px !important;
         margin: auto !important;
+    }
+    /* Dropdown Enhancement */
+    .dropdown select {
+        pointer-events: auto !important;
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem !important;
+        font-size: 1rem !important;
+    }
+    .dropdown select:hover {
+        border-color: #4ade80 !important;
+    }
+    .dropdown select:focus {
+        border-color: #22c55e !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
     }
     .main-header {
         text-align: center;
@@ -243,6 +411,8 @@ with gr.Blocks(
     # Header
     with gr.Row():
         gr.HTML("""
+        <link rel="manifest" href="/file/static/manifest.json">
+        <meta name="theme-color" content="#667eea">
         <div class="main-header">
             <h1 style="margin: 0; font-size: 2.5rem; font-weight: 700;">
                 🧬 GENELINGUA v7
@@ -251,7 +421,7 @@ with gr.Blocks(
                 Your Personalized DNA + AI Language Learning Coach
             </p>
             <p style="margin: 0.5rem 0 0 0; font-size: 1rem; opacity: 0.8;">
-                Upload your 23andMe data and get a customized Japanese learning plan based on your genetics
+                Upload your 23andMe data and get a customized language learning plan based on your genetics
             </p>
         </div>
         """)
@@ -259,13 +429,22 @@ with gr.Blocks(
     # Input Section
     with gr.Group():
         gr.HTML('<div class="section-title">👤 Personal Information</div>')
+        gr.HTML('<p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">💡 <strong>Tip:</strong> Enter your name to automatically load your saved settings. Only update daily activities for returning users!</p>')
         with gr.Row():
             with gr.Column(scale=2):
                 user_id = gr.Textbox(
-                    value="alex",
+                    value="",
                     label="🏷️ Your Name/ID",
-                    placeholder="Enter your name or unique ID"
+                    placeholder="Enter your name to load saved profile"
                 )
+            with gr.Column(scale=2):
+                profile_status = gr.Textbox(
+                    label="📋 Profile Status",
+                    value="Enter your name to load saved settings",
+                    interactive=False
+                )
+
+        with gr.Row():
             with gr.Column(scale=2):
                 ancestry = gr.Dropdown(
                     choices=[
@@ -291,6 +470,20 @@ with gr.Blocks(
                     value="INTJ",
                     label="🧠 MBTI Personality Type"
                 )
+
+        with gr.Row():
+            with gr.Column(scale=3):
+                target_language = gr.Dropdown(
+                    choices=[
+                        ("🇯🇵 Japanese", "japanese"),
+                        ("🇳🇱 Dutch", "dutch"),
+                        ("🇨🇳 Chinese (Mandarin)", "chinese")
+                    ],
+                    value="japanese",
+                    label="🎌 Target Language"
+                )
+            with gr.Column(scale=2):
+                gr.HTML("<div style='padding: 1rem;'></div>")  # Spacer
 
     with gr.Group():
         gr.HTML('<div class="section-title">🧬 Genetic Data & Learning Context</div>')
@@ -391,11 +584,18 @@ with gr.Blocks(
                 file_count="single"
             )
 
+    # === Profile Loading Event ===
+    user_id.change(
+        fn=load_profile_on_name_change,
+        inputs=[user_id],
+        outputs=[ancestry, mbti, target_language, profile_status]
+    )
+
     # === Button Action ===
     btn.click(
         fn=process_user,
         inputs=[user_id, dna_file, ancestry,
-                mbti, log_text, photo, voice_file],
+                mbti, target_language, log_text, photo, voice_file],
         outputs=[
             dna_out, method_out, progress_plot,
             words_out, sentences_out, dna_plot,
@@ -407,15 +607,20 @@ with gr.Blocks(
 if __name__ == "__main__":
     logger.info("Launching GENELINGUA v7 Gradio app...")
 
-    # Serve static files
-    import os
-    static_path = os.path.join(os.getcwd(), "static")
+    # Add custom CSS to suppress console errors
+    demo.css += """
+    /* Hide console error indicators */
+    .gradio-container { 
+        --error-text-color: transparent;
+    }
+    """
 
     demo.launch(
-        share=True,
+        share=False,  # Disable share to avoid connection issues
         server_name="0.0.0.0",
         server_port=7860,
         favicon_path="static/favicon.ico" if os.path.exists(
             "static/favicon.ico") else None,
-        show_error=True
+        show_error=True,
+        quiet=True  # Reduce console noise
     )
