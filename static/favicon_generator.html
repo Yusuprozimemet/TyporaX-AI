@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GeneLingua Favicon Generator</title>
+</head>
+
+<body>
+    <canvas id="favicon" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <script>
+        const canvas = document.getElementById('favicon');
+        const ctx = canvas.getContext('2d');
+
+        // Create a simple DNA-themed favicon
+        ctx.fillStyle = '#667eea';
+        ctx.fillRect(0, 0, 32, 32);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('G', 16, 24);
+
+        // Convert to ICO format would require additional libraries
+        // For now, we'll create a simple placeholder
+    </script>
+</body>
+
+</html>

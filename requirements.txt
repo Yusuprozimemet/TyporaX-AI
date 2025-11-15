@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────
+# Core UI
+gradio>=4.50
+
+# ──────────────────────────────────────────────────────────────
+# LLM / generation
+transformers>=4.45
+torch>=2.3,<2.10          # 2.9.x works on 3.13, 2.10+ still building
+vllm>=0.6
+accelerate
+
+# ──────────────────────────────────────────────────────────────
+# Voice to text (optional – remove if you never use voice_file)
+openai-whisper>=20231117
+
+# ──────────────────────────────────────────────────────────────
+# Audio synthesis
+edge-tts
+
+# ──────────────────────────────────────────────────────────────
+# PDF / HTML rendering
+jinja2
+reportlab
+
+# ──────────────────────────────────────────────────────────────
+# Data / plotting
+pandas
+matplotlib
+seaborn
+scipy
+numpy
+
+# ──────────────────────────────────────────────────────────────
+# Misc utilities
+pytesseract
+opencv-python
+pillow
+gspread
+oauth2client

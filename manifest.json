@@ -1,0 +1,16 @@
+{
+    "name": "GeneLingua v7",
+    "short_name": "GeneLingua",
+    "description": "DNA + AI Language Coach",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1976D2",
+    "icons": [
+        {
+            "src": "static/favicon.ico",
+            "sizes": "32x32",
+            "type": "image/x-icon"
+        }
+    ]
+}
