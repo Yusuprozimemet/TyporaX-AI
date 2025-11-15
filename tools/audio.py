@@ -23,11 +23,32 @@ def generate_audio(sentences, user_id, target_language="japanese"):
     path = f"data/users/{user_id}/lesson_audio.mp3"
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(_tts(text, path, voice))
-        loop.close()
+        # Check if event loop is already running (e.g., in FastAPI)
+        try:
+            loop = asyncio.get_running_loop()
+            # If we get here, there's already a loop running
+            # We need to run in a thread pool executor
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(_run_tts_sync, text, path, voice)
+                future.result(timeout=30)
+        except RuntimeError:
+            # No event loop running, create a new one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(_tts(text, path, voice))
+            loop.close()
     except Exception as e:
         print(f"TTS failed: {e}")
         return None
     return path
+
+
+def _run_tts_sync(text, path, voice):
+    """Synchronous wrapper to run TTS in a separate thread"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(_tts(text, path, voice))
+    finally:
+        loop.close()

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENELINGUA - DNA + AI Language Coach</title>
+    <link rel="stylesheet" href="/static/vscode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Activity Bar (Left-most sidebar) -->
+    <div class="activity-bar">
+        <div class="activity-item active" data-panel="explorer" title="Explorer">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="activity-item" data-panel="search" title="Learning">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="activity-item" data-panel="git" title="Progress">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="activity-item" data-panel="extensions" title="Resources">
+            <i class="fas fa-download"></i>
+        </div>
+        <div class="activity-spacer"></div>
+        <div class="activity-item" data-panel="settings" title="Settings">
+            <i class="fas fa-cog"></i>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-user-circle"></i> USER PROFILE</h3>
+        </div>
+        <div class="sidebar-content">
+            <div class="form-group">
+                <label for="user_id">
+                    <i class="fas fa-id-card"></i> Your Name or ID
+                </label>
+                <input type="text" id="user_id" placeholder="e.g., John, alex, yusup...">
+                <div class="hint">Used to save and load your settings</div>
+            </div>
+
+            <div class="form-group">
+                <div class="status-box" id="profile_status">
+                    Enter name to load profile
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
+                <i class="fas fa-dna"></i> GENETIC & PERSONAL
+            </div>
+
+            <div class="form-group">
+                <label for="ancestry">
+                    <i class="fas fa-globe"></i> Ancestry Background
+                </label>
+                <select id="ancestry">
+                    <option value="EUR">🌍 European</option>
+                    <option value="EAS" selected>🌏 East Asian</option>
+                    <option value="SAS">🌏 South Asian</option>
+                    <option value="AFR">🌍 African</option>
+                    <option value="AMR">🌎 American</option>
+                    <option value="MENA">🌍 Middle Eastern/North African</option>
+                    <option value="OTH">🌐 Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="mbti">
+                    <i class="fas fa-brain"></i> Personality Type (MBTI)
+                </label>
+                <select id="mbti">
+                    <option value="INTJ" selected>INTJ</option>
+                    <option value="INTP">INTP</option>
+                    <option value="ENTJ">ENTJ</option>
+                    <option value="ENTP">ENTP</option>
+                    <option value="INFJ">INFJ</option>
+                    <option value="INFP">INFP</option>
+                    <option value="ENFJ">ENFJ</option>
+                    <option value="ENFP">ENFP</option>
+                    <option value="ISTJ">ISTJ</option>
+                    <option value="ISFJ">ISFJ</option>
+                    <option value="ESTJ">ESTJ</option>
+                    <option value="ESFJ">ESFJ</option>
+                    <option value="ISTP">ISTP</option>
+                    <option value="ISFP">ISFP</option>
+                    <option value="ESTP">ESTP</option>
+                    <option value="ESFP">ESFP</option>
+                </select>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
+                <i class="fas fa-language"></i> LANGUAGE LEARNING
+            </div>
+
+            <div class="form-group">
+                <label for="target_language">
+                    <i class="fas fa-flag"></i> Target Language
+                </label>
+                <select id="target_language">
+                    <option value="japanese" selected>🇯🇵 Japanese (日本語)</option>
+                    <option value="dutch">🇳🇱 Dutch (Nederlands)</option>
+                    <option value="chinese">🇨🇳 Chinese (中文)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="log_text">
+                    <i class="fas fa-calendar-day"></i> Today's Activities
+                </label>
+                <textarea id="log_text" rows="3"
+                    placeholder="e.g., Had coffee with friends, watched anime...">Dutch languge, Learning, Method, Anki</textarea>
+                <div class="hint">What did you do today? (for context-based lessons)</div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
+                <i class="fas fa-dna"></i> DNA DATA (OPTIONAL)
+            </div>
+
+            <div class="form-group">
+                <div class="hint" style="margin-bottom: 8px;">💡 Upload once - saved for future use</div>
+                <input type="file" id="dna_file" accept=".txt,.zip">
+            </div>
+
+            <button class="btn-primary" id="generateBtn">
+                <i class="fas fa-rocket"></i> Generate Learning Plan
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Editor Area -->
+    <div class="editor-container">
+        <!-- Tabs -->
+        <div class="editor-tabs">
+            <div class="tab active" data-tab="overview">
+                <i class="fas fa-home"></i> Overview
+            </div>
+            <div class="tab" data-tab="dna">
+                <i class="fas fa-dna"></i> DNA Analysis
+            </div>
+            <div class="tab" data-tab="lesson">
+                <i class="fas fa-book-open"></i> Today's Lesson
+            </div>
+            <div class="tab" data-tab="anki">
+                <i class="fas fa-clone"></i> Anki Flashcards
+            </div>
+            <div class="tab" data-tab="markdown">
+                <i class="fas fa-file-alt"></i> Markdown Editor
+            </div>
+            <div class="tab" data-tab="resources">
+                <i class="fas fa-folder-open"></i> Resources
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="editor-content">
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-content">
+                <div class="welcome-header">
+                    <h1><i class="fas fa-dna"></i> GENELINGUA</h1>
+                    <p>Your Personalized DNA + AI Language Learning Coach</p>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-dna"></i> DNA Analysis</h3>
+                        <div id="dna_output" class="output-text">
+                            Upload your DNA file and click "Generate Learning Plan" to see your personalized analysis
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-bullseye"></i> Recommended Study Method</h3>
+                        <div id="method_output" class="output-text">
+                            Your personalized study method will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-book"></i> Vocabulary Words</h3>
+                        <div id="words_output" class="output-text">
+                            Your vocabulary will appear here
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-comments"></i> Practice Sentences</h3>
+                        <div id="sentences_output" class="output-text">
+                            Your practice sentences will appear here
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNA Analysis Tab -->
+            <div class="tab-content" id="dna-content">
+                <h2><i class="fas fa-dna"></i> DNA Analysis Report</h2>
+                <div class="card">
+                    <h3>Genetic Learning Aptitude</h3>
+                    <div id="dna_detail" class="output-text">
+                        No data available yet
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Detailed DNA Report</h3>
+                    <div id="dna_plot_container">
+                        <img id="dna_plot" style="display: none; max-width: 100%; border-radius: 8px;">
+                        <div class="output-text" id="dna_plot_placeholder">
+                            DNA visualization will appear here after analysis
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Tab -->
+            <div class="tab-content" id="lesson-content">
+                <h2><i class="fas fa-book-open"></i> Today's Lesson</h2>
+                <div class="card">
+                    <h3><i class="fas fa-spell-check"></i> Vocabulary List</h3>
+                    <div id="words_detail" class="output-text">
+                        No vocabulary loaded yet
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-paragraph"></i> Practice Sentences</h3>
+                    <div id="sentences_detail" class="output-text">
+                        No sentences loaded yet
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Progress Tracker</h3>
+                    <div id="progress_plot_container">
+                        <img id="progress_plot" style="display: none; max-width: 100%; border-radius: 8px;">
+                        <div class="output-text" id="progress_plot_placeholder">
+                            Progress visualization will appear here
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anki Flashcards Tab -->
+            <div class="tab-content" id="anki-content">
+                <h2><i class="fas fa-clone"></i> Anki Flashcards</h2>
+                <div class="flashcard-controls">
+                    <button class="btn-flashcard" id="prevCard" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span class="card-counter" id="cardCounter">0 / 0</span>
+                    <button class="btn-flashcard" id="nextCard" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="flashcard-container" id="flashcardContainer">
+                    <div class="flashcard" id="flashcard">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <div class="output-text">Generate your learning plan to see flashcards</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="output-text">Answer will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-flip" id="flipCard">Click to Flip</button>
+                </div>
+            </div>
+
+            <!-- Markdown Editor Tab -->
+            <div class="tab-content" id="markdown-content">
+                <div class="markdown-editor-container">
+                    <div class="markdown-editor-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-edit"></i> Editor</h3>
+                            <button class="btn-small" id="clearMarkdown" title="Clear editor">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <textarea id="markdownInput"
+                            placeholder="# Write your markdown here...\n\nYou can use **bold**, *italic*, lists, and more!"></textarea>
+                    </div>
+                    <div class="markdown-preview-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-eye"></i> Preview</h3>
+                        </div>
+                        <div id="markdownPreview" class="markdown-preview">
+                            <p class="output-text">Start typing in the editor to see the preview here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources Tab -->
+            <div class="tab-content" id="resources-content">
+                <h2><i class="fas fa-folder-open"></i> Learning Resources</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-file-pdf"></i> PDF Report</h3>
+                    <div id="pdf_output">
+                        <p class="output-text">Generate your learning plan to download the complete PDF report</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-clone"></i> Anki Deck</h3>
+                    <div id="anki_output">
+                        <p class="output-text">Your Anki flashcard deck will be available here for spaced repetition
+                            practice</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-volume-up"></i> Audio Guide</h3>
+                    <div id="audio_output">
+                        <p class="output-text">Pronunciation audio will be available here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span id="status_message"><i class="fas fa-circle"></i> Ready</span>
+        </div>
+        <div class="status-right">
+            <span><i class="fas fa-user"></i> <span id="current_user">Not logged in</span></span>
+            <span><i class="fas fa-language"></i> <span id="current_language">Japanese</span></span>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

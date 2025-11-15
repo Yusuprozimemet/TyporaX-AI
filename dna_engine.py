@@ -589,6 +589,32 @@ class DNAPolygenicEngine:
         }
 
     # =========================
+    # 7.5. Phenotype Categorization
+    # =========================
+    def categorize_snps_by_phenotype(self, contributions: Dict[str, Dict]) -> Dict[str, float]:
+        """Categorize SNPs by cognitive domain and sum their contributions"""
+        phenotype_categories = {
+            'Reading/Language': ['Nonword reading', 'Phonemic awareness', 'reading', 'language'],
+            'Memory': ['memory', 'Hippocampal', 'working memory'],
+            'Auditory': ['Hearing', 'auditory'],
+            'Cognition': ['IQ', 'cognitive', 'attainment', 'brain age'],
+            'Dopamine': ['COMT', 'DRD2', 'creative', 'dopamine']
+        }
+
+        category_scores = {}
+        for cat, keywords in phenotype_categories.items():
+            cat_score = 0
+            for rsid, contrib_data in contributions.items():
+                phenotype = contrib_data.get('phenotype', '').lower()
+                if any(kw.lower() in phenotype for kw in keywords):
+                    contrib = contrib_data.get('contrib')
+                    if contrib is not None:
+                        cat_score += contrib
+            category_scores[cat] = cat_score
+
+        return category_scores
+
+    # =========================
     # 8. Full Report Generator
     # =========================
     def generate_report(self, file_path: str, selected_ancestry: str = 'EUR') -> Dict[str, Any]:
@@ -602,19 +628,53 @@ class DNAPolygenicEngine:
         raw_score, contributions, n_valid_snps, total_weight = self.compute_pgs(
             snp_map, selected_ancestry)
         z_score, percentile, estimated_r2 = self.compute_z_score(
-            raw_score, selected_ancestry)
+            raw_score, selected_ancestry, contributions)
 
         # Interpretation
         interpretation = self.interpret_score(
             z_score, percentile, estimated_r2, n_valid_snps)
 
+        # Phenotype categorization
+        category_scores = self.categorize_snps_by_phenotype(contributions)
+
+        # Evidence quality distribution
+        evidence_counts = {}
+        for c in contributions.values():
+            evidence = c.get('evidence', 'Unknown')
+            evidence_counts[evidence] = evidence_counts.get(evidence, 0) + 1
+
         # Top contributors
         top_contributors = sorted(
-            [(rsid, c)
+            [(rsid, c, self.SNP_DB_PGS[rsid])
              for rsid, c in contributions.items() if c['contrib'] is not None],
             key=lambda x: abs(x[1]['contrib']),
             reverse=True
         )[:5]
+
+        # Format top contributors with full details
+        top_contributors_detailed = []
+        for rsid, contrib, meta in top_contributors:
+            dosage = contrib['dosage']
+            if dosage == 2:
+                dosage_text = "🔴🔴 Homozygous for effect allele (2 copies)"
+            elif dosage == 1:
+                dosage_text = "🟡 Heterozygous (1 copy)"
+            else:
+                dosage_text = "⚪ No effect allele copies"
+
+            top_contributors_detailed.append({
+                'rsid': rsid,
+                'gene': meta['gene'],
+                'genotype': contrib['genotype'],
+                'dosage': dosage,
+                'dosage_text': dosage_text,
+                'contribution': contrib['contrib'],
+                'phenotype': meta['phenotype'],
+                'evidence': meta['evidence'],
+                'population': meta['population'],
+                'refs': meta['refs'],
+                'notes': meta['notes']
+            })
 
         # Scenarios
         scenarios = [
@@ -644,7 +704,9 @@ class DNAPolygenicEngine:
             "metadata": {
                 "generated": datetime.now(timezone.utc).isoformat(),
                 "version": "3.5_evidence_based",
-                "disclaimer": "Educational tool only. Not diagnostic or predictive of individual success."
+                "disclaimer": "Educational tool only. Not diagnostic or predictive of individual success.",
+                "selected_ancestry": selected_ancestry,
+                "ancestry_label": self.ancestry_labels.get(selected_ancestry, selected_ancestry)
             },
             "pgs_results": {
                 "raw_score": round(raw_score, 5),
@@ -657,7 +719,9 @@ class DNAPolygenicEngine:
             },
             "snp_contributions": contributions,
             "interpretation": interpretation,
-            "top_contributors": top_contributors,
+            "top_contributors": top_contributors_detailed,
+            "category_scores": category_scores,
+            "evidence_distribution": evidence_counts,
             "scenarios": scenario_results,
             "warnings": [
                 "No validated PGS for language learning exists",
