@@ -15,13 +15,143 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-// Activity bar switching (optional - for future enhancements)
+// Sidebar toggle functionality
+const sidebar = document.querySelector('.sidebar');
+let currentActivePanel = 'explorer';
+let sidebarVisible = true;
+
+// Activity bar switching with sidebar toggle
 document.querySelectorAll('.activity-item').forEach(item => {
     item.addEventListener('click', () => {
+        const panel = item.dataset.panel;
+        
+        if (currentActivePanel === panel && sidebarVisible) {
+            // Clicking the same active panel - hide sidebar
+            hideSidebar();
+        } else {
+            // Show sidebar and switch to new panel
+            showSidebar();
+            switchToPanel(panel);
+        }
+        
+        // Update active states
         document.querySelectorAll('.activity-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
+        if (sidebarVisible) {
+            item.classList.add('active');
+            currentActivePanel = panel;
+        }
     });
 });
+
+function showSidebar() {
+    sidebar.classList.remove('collapsed');
+    sidebarVisible = true;
+    console.log('📱 Sidebar opened');
+}
+
+function hideSidebar() {
+    sidebar.classList.add('collapsed');
+    sidebarVisible = false;
+    currentActivePanel = null;
+    document.querySelectorAll('.activity-item').forEach(i => i.classList.remove('active'));
+    console.log('📱 Sidebar closed');
+}
+
+function switchToPanel(panel) {
+    // Update sidebar header and content based on panel
+    const sidebarHeader = document.querySelector('.sidebar-header h3');
+    const panelConfigs = {
+        'explorer': {
+            title: '<i class="fas fa-user-circle"></i> USER PROFILE',
+            contentId: 'profile-content'
+        },
+        'search': {
+            title: '<i class="fas fa-book"></i> LEARNING',
+            contentId: 'learning-content'
+        },
+        'git': {
+            title: '<i class="fas fa-chart-line"></i> PROGRESS',
+            contentId: 'progress-content'
+        },
+        'extensions': {
+            title: '<i class="fas fa-download"></i> RESOURCES',
+            contentId: 'resources-content'
+        },
+        'settings': {
+            title: '<i class="fas fa-cog"></i> SETTINGS',
+            contentId: 'settings-content'
+        }
+    };
+    
+    const config = panelConfigs[panel];
+    if (config && sidebarHeader) {
+        // Update header
+        sidebarHeader.innerHTML = config.title;
+        
+        // Hide all sidebar content sections
+        document.querySelectorAll('.sidebar-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        
+        // Show the selected content
+        const targetContent = document.getElementById(config.contentId);
+        if (targetContent) {
+            targetContent.style.display = 'block';
+        }
+        
+        console.log(`📱 Switched to ${panel} panel`);
+    }
+}
+
+// Initialize sidebar state
+function initializeSidebar() {
+    // Start with explorer panel active and sidebar visible
+    const explorerItem = document.querySelector('.activity-item[data-panel="explorer"]');
+    if (explorerItem) {
+        explorerItem.classList.add('active');
+    }
+    
+    // Ensure profile content is visible by default
+    switchToPanel('explorer');
+    console.log('📱 Sidebar initialized');
+}
+
+// Keyboard shortcuts for sidebar
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + B to toggle sidebar
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        if (sidebarVisible) {
+            hideSidebar();
+        } else {
+            showSidebar();
+            // Restore last active panel or default to explorer
+            const lastActive = currentActivePanel || 'explorer';
+            switchToPanel(lastActive);
+            document.querySelector(`[data-panel="${lastActive}"]`)?.classList.add('active');
+            currentActivePanel = lastActive;
+        }
+    }
+    
+    // Quick panel switching with Ctrl/Cmd + number keys
+    if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '5') {
+        e.preventDefault();
+        const panels = ['explorer', 'search', 'git', 'extensions', 'settings'];
+        const panelIndex = parseInt(e.key) - 1;
+        const panel = panels[panelIndex];
+        
+        if (panel) {
+            showSidebar();
+            switchToPanel(panel);
+            document.querySelectorAll('.activity-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-panel="${panel}"]`)?.classList.add('active');
+            currentActivePanel = panel;
+        }
+    }
+});
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeSidebar);
 
 // User profile loading
 const userIdInput = document.getElementById('user_id');

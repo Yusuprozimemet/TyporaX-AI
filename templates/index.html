@@ -37,7 +37,7 @@
         <div class="sidebar-header">
             <h3><i class="fas fa-user-circle"></i> USER PROFILE</h3>
         </div>
-        <div class="sidebar-content">
+        <div class="sidebar-content" id="profile-content">
             <div class="form-group">
                 <label for="user_id">
                     <i class="fas fa-id-card"></i> Your Name or ID
@@ -136,6 +136,158 @@
 
             <button class="btn-primary" id="generateBtn">
                 <i class="fas fa-rocket"></i> Generate Learning Plan
+            </button>
+        </div>
+
+        <!-- Learning Content (hidden by default) -->
+        <div class="sidebar-content" id="learning-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-graduation-cap"></i> LEARNING PROGRESS
+            </div>
+            
+            <div class="progress-item">
+                <div class="progress-label">Current User:</div>
+                <div class="progress-value" id="current_user">Not logged in</div>
+            </div>
+            
+            <div class="progress-item">
+                <div class="progress-label">Target Language:</div>
+                <div class="progress-value" id="current_language">Japanese</div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i> SESSION STATS
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Messages Today</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Experts Talked</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Content (hidden by default) -->
+        <div class="sidebar-content" id="progress-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-trophy"></i> ACHIEVEMENTS
+            </div>
+            
+            <div class="achievement-item">
+                <i class="fas fa-star"></i>
+                <div class="achievement-text">
+                    <div class="achievement-title">First Steps</div>
+                    <div class="achievement-desc">Started learning journey</div>
+                </div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="section-title">
+                <i class="fas fa-calendar-week"></i> WEEKLY PROGRESS
+            </div>
+            
+            <div class="progress-chart">
+                <div class="chart-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Start chatting to see progress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Content (hidden by default) -->
+        <div class="sidebar-content" id="resources-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-download"></i> DOWNLOADS
+            </div>
+            
+            <div class="resource-item">
+                <i class="fas fa-file-pdf"></i>
+                <div class="resource-info">
+                    <div class="resource-name">Learning Report</div>
+                    <div class="resource-size">Generate first</div>
+                </div>
+            </div>
+            
+            <div class="resource-item">
+                <i class="fas fa-clone"></i>
+                <div class="resource-info">
+                    <div class="resource-name">Anki Deck</div>
+                    <div class="resource-size">Generate first</div>
+                </div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="section-title">
+                <i class="fas fa-link"></i> USEFUL LINKS
+            </div>
+            
+            <div class="link-item">
+                <a href="#" class="resource-link">
+                    <i class="fas fa-external-link-alt"></i> Dutch Grammar Guide
+                </a>
+            </div>
+            
+            <div class="link-item">
+                <a href="#" class="resource-link">
+                    <i class="fas fa-external-link-alt"></i> Pronunciation Practice
+                </a>
+            </div>
+        </div>
+
+        <!-- Settings Content (hidden by default) -->
+        <div class="sidebar-content" id="settings-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-palette"></i> APPEARANCE
+            </div>
+            
+            <div class="form-group">
+                <label for="theme_select">
+                    <i class="fas fa-moon"></i> Theme
+                </label>
+                <select id="theme_select">
+                    <option value="dark">Dark Theme</option>
+                    <option value="light">Light Theme</option>
+                    <option value="auto">Auto (System)</option>
+                </select>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="section-title">
+                <i class="fas fa-volume-up"></i> AUDIO SETTINGS
+            </div>
+            
+            <div class="form-group">
+                <label for="voice_speed">
+                    <i class="fas fa-tachometer-alt"></i> Speech Speed
+                </label>
+                <input type="range" id="voice_speed" min="0.5" max="2" step="0.1" value="1">
+                <div class="hint">Current: Normal (1.0x)</div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="auto_speak" checked>
+                    <label for="auto_speak">Auto-speak expert responses</label>
+                </div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="section-title">
+                <i class="fas fa-database"></i> DATA
+            </div>
+            
+            <button class="btn-secondary" id="clearDataBtn">
+                <i class="fas fa-trash"></i> Clear All Data
             </button>
         </div>
     </div>
