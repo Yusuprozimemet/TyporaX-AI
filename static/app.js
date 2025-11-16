@@ -451,3 +451,1040 @@ if (savedMarkdown) {
     updateMarkdownPreview();
 }
 
+// Chat functionality
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendButton = document.getElementById('sendButton');
+const voiceButton = document.getElementById('voiceButton');
+const expertSelect = document.getElementById('expertSelect');
+
+let isRecording = false;
+let recognition = null;
+let currentExpert = 'healthcare';
+let conversationHistory = [];
+
+// Initialize speech recognition if available
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US'; // Default, will be updated based on conversation
+
+    recognition.onstart = () => {
+        isRecording = true;
+        voiceButton.classList.add('recording');
+        voiceButton.innerHTML = '<i class="fas fa-stop"></i>';
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript;
+        autoResizeTextarea(chatInput);
+    };
+
+    recognition.onend = () => {
+        isRecording = false;
+        voiceButton.classList.remove('recording');
+        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        isRecording = false;
+        voiceButton.classList.remove('recording');
+        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+} else {
+    // Hide voice button if speech recognition is not supported
+    voiceButton.style.display = 'none';
+}
+
+// Expert selection
+expertSelect.addEventListener('change', (e) => {
+    currentExpert = e.target.value;
+
+    // Reset conversation history when switching experts
+    conversationHistory = [];
+
+    // Update assessment panel context
+    const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
+    assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
+
+    addWelcomeMessage();
+});
+
+// Chat input handlers
+chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+chatInput.addEventListener('input', () => {
+    autoResizeTextarea(chatInput);
+    sendButton.disabled = !chatInput.value.trim();
+});
+
+sendButton.addEventListener('click', sendMessage);
+
+voiceButton.addEventListener('click', () => {
+    if (!recognition) return;
+
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        // Update recognition language based on recent messages
+        updateRecognitionLanguage();
+        recognition.start();
+    }
+});
+
+function updateRecognitionLanguage() {
+    if (!recognition) return;
+
+    // Get the last few messages to detect conversation language
+    const messages = chatMessages.querySelectorAll('.message.expert .message-text');
+    if (messages.length > 0) {
+        const recentText = Array.from(messages)
+            .slice(-3) // Last 3 expert messages
+            .map(msg => msg.textContent)
+            .join(' ');
+
+        const detectedLang = detectLanguage(recentText);
+        const voiceConfig = getVoiceForLanguage(detectedLang);
+
+        // Update recognition language
+        recognition.lang = voiceConfig.lang;
+        console.log(`🎤 Updated speech recognition to: ${voiceConfig.lang} (detected: ${detectedLang})`);
+    }
+}
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+function addMessage(content, isUser = false, speakText = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user' : 'expert'}`;
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas ${isUser ? 'fa-user' : getExpertIcon()}"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${content}</div>
+            <div class="message-time">${time}</div>
+            ${!isUser && speakText ? `
+                <div class="message-actions">
+                    <button class="btn-message-action" onclick="speakMessage('${content.replace(/'/g, '\\\\').replace(/"/g, '&quot;')}')" title="Listen to response (High Quality)">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Speak the message if requested and speech synthesis is available
+    if (speakText && 'speechSynthesis' in window) {
+        speakMessage(content);
+    }
+}
+
+function getExpertIcon() {
+    const icons = {
+        healthcare: 'fa-user-md',
+        interview: 'fa-user-tie',
+        language: 'fa-graduation-cap'
+    };
+    return icons[currentExpert] || 'fa-robot';
+}
+
+function addWelcomeMessage() {
+    chatMessages.innerHTML = '';
+    const welcomeMessages = {
+        healthcare: "Hallo! Ik ben je Nederlandse zorgexpert. Ik help je graag met medische vragen terwijl we samen je Nederlands verbeteren. Waar kan ik je mee helpen?",
+        interview: "Hoi! Ik ben je Nederlandse IT-sollicitatiecoach. Ik help je graag met technische gesprekken in het Netherlands en IT-vocabulaire. Waar wil je aan werken?",
+        language: "Welkom! Ik ben je Nederlandse taalcoach. Ik help je graag met grammatica, uitspraak, Nederlandse cultuur en natuurlijke gesprekken. Wat wil je vandaag leren?"
+    };
+
+    setTimeout(() => {
+        addMessage(welcomeMessages[currentExpert] || "Hallo! Hoe kan ik je helpen met Nederlands leren?", false, true);
+    }, 500);
+}
+
+function addTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message expert';
+    typingDiv.id = 'typing-indicator';
+
+    typingDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas ${getExpertIcon()}"></i>
+        </div>
+        <div class="typing-indicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+async function sendMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    // Add user message
+    addMessage(message, true);
+
+    // Update conversation history for assessment
+    conversationHistory.push({ role: 'user', content: message });
+
+    // Clear input
+    chatInput.value = '';
+    autoResizeTextarea(chatInput);
+    sendButton.disabled = true;
+
+    // Show typing indicator
+    addTypingIndicator();
+
+    try {
+        // Get user ID from profile
+        const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
+
+        // Send to backend
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                expert: currentExpert,
+                user_id: userId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        // Remove typing indicator
+        removeTypingIndicator();
+
+        // Add expert response
+        addMessage(data.response, false, true);
+
+        // Update conversation history
+        conversationHistory.push({ role: 'assistant', content: data.response });
+
+        // Keep conversation history manageable
+        if (conversationHistory.length > 20) {
+            conversationHistory = conversationHistory.slice(-20);
+        }
+
+        // Update assessment panel context
+        assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
+
+        // Always trigger assessment update for every user message (real-time analysis)
+        await assessmentPanel.updateAssessment(message);
+    } catch (error) {
+        console.error('Error sending message:', error);
+        removeTypingIndicator();
+        addMessage("I'm sorry, I'm having trouble connecting right now. Please try again.", false);
+    }
+}
+
+function detectLanguage(text) {
+    // Enhanced language detection focusing on the main content language
+    const patterns = {
+        'dutch': /\b(nederlands|spreek|spreken|kun|kunt|moet|kunnen|willen|zeggen|doen|maken|gaan|komen|worden|zijn|hebben|krijgen|houden|laten|staan|liggen|zitten|lopen|rijden|werken|spelen|eten|drinken|slapen|praten|luisteren|kijken|lezen|schrijven|leren|begrijpen|weten|denken|voelen|horen|zien|ruiken|proeven|aanraken|het|van|een|te|zijn|op|met|voor|als|aan|door|over|om|niet|maar|zo|ook|wel|nog|bij|tot|onder|naar|waar|wat|wie|hoe|waarom|wanneer|omdat|hoewel|toen|terwijl|indien|tenzij|hallo|dag|goedemorgen|goedemiddag|goedenavond|goedenacht|dankjewel|bedankt|alsjeblieft|sorry|excuses|pardon|ja|nee|misschien|wellicht|natuurlijk|zeker|absoluut|precies|inderdaad|werkelijk|echt|heel|erg|zeer|nogal|vrij|tamelijk|redelijk|behoorlijk|enigszins|ietwat|lichtelijk|gisteren|vandaag|morgen|overmorgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december|de)\b/gi,
+        'english': /\b(the|and|is|that|to|of|in|it|you|for|with|on|as|be|at|by|this|have|from|or|one|had|but|word|not|what|all|were|they|we|when|your|can|said|there|each|which|she|do|how|their|if|will|up|other|about|out|many|then|them|these|so|some|her|would|make|like|into|him|has|two|more|go|no|way|could|my|than|first|water|been|call|who|its|now|find|long|down|day|did|get|come|made|may|part|over|new|sound|take|only|little|work|know|place|year|live|me|back|give|most|very|after|thing|our|just|name|good|sentence|man|think|say|great|where|help|through|much|before|line|right|too|mean|old|any|same|tell|boy|follow|came|want|show|also|around|form|three|small|set|put|end|why|again|turn|here|move|well|asked|went|men|read|need|land|different|home|us|picture|try|kind|hand|head|high|every|near|add|food|between|own|below|country|plant|last|school|father|keep|tree|never|start|city|earth|eye|light|thought|open|example|begin|life|always|those|both|paper|together|got|group|often|run|important|until)\b/gi,
+        'german': /\b(der|die|das|und|ist|zu|den|in|von|mit|auf|für|als|an|werden|aus|er|hat|dass|sie|nach|ein|dem|nicht|war|es|sich|auch|are|einer|bei|des|um|im|am|sind|noch|wie|einem|über|einen|so|zum|kann|habe|seine|mark|ihre|dann|unter|wir|sollte|nur|vor|zur|bis|seine|durch|jahre|mehr|wo|viel|kommen|schon|ihm|weil|ihre|würde|machen|wenn|hier|kann|alle|will|sollen|andere|eines|können|unser|along|gegen|vom|geht|sehr|her|zeit|jedoch|wieder|keine|zwei|ohne|samt|einmal)\b/gi,
+        'french': /\b(le|de|et|est|il|être|et|en|avoir|que|pour|dans|ce|son|une|sur|avec|ne|se|pas|tout|plus|par|grand|ou|si|les|du|un|à|nous|vous|ma|ta|sa|mes|tes|ses|notre|votre|leur|nos|vos|leurs|moi|toi|lui|elle|nous|vous|eux|elles|mon|ton|son|ma|ta|sa|mes|tes|ses|ce|cet|cette|ces|qui|que|quoi|dont|où|quand|comment|pourquoi|parce|car|mais|ou|et|donc|or|ni|cependant|néanmoins|toutefois|pourtant|en|effet|bien|sûr|évidemment|naturellement|certainement|probablement|peut-être|sans|doute|hier|aujourd|demain|maintenant|bientôt|toujours|jamais|souvent|parfois|rarement|déjà|encore|enfin)\b/gi,
+        'spanish': /\b(el|la|de|que|y|a|en|un|es|se|no|te|lo|le|da|su|por|son|con|para|al|una|del|los|las|me|él|todo|ella|uno|ser|su|hay|había|esta|han|la|si|más|lo|pero|sus|le|ya|o|este|sí|porque|qué|sólo|han|así|cómo|e|cuando|muy|sin|sobre|también|me|hasta|donde|quien|desde|todos|durante|todos|mucho|antes|ser|estar|tener|hacer|poder|decir|todo|cada|gran|otro|mismo|gobierno|mientras|vida|días|tiempo|hombre|estado|país|forma|caso|mano|lugar|parte|parecer|llegar|creer|hablar|llevar|dejar|seguir|encontrar|llamar|venir|pensar|salir|volver|tomar|conocer|vivir|sentir|tratar|mirar|contar|empezar|esperar|buscar|existir|entrar|trabajar|escribir|perder|producir|ocurrir|entender|pedir|recibir|recordar|terminar|permitir|aparecer|conseguir|comenzar|servir|sacar)\b/gi,
+        'japanese': /[ひらがなカタカナ漢字]|\b(です|だ|である|します|した|する|すれば|されば|せよ|しろ|しなさい|ください|ます|まし|ました|ません|ませんでした|でしょう|だろう|かもしれません|と思います|と思う|ということ|について|に関して|において|によって|として|から|まで|より|ほど|ばかり|だけ|しか|も|は|が|を|に|へ|で|と|や|の|か|よ|ね|な|ぞ|ぜ|さ|わ|こんにちは|おはよう|こんばんは|ありがとう|すみません|ごめんなさい|はい|いいえ|そうです|違います)\b/gi,
+        'chinese': /[\u4e00-\u9fff]|\b(是|的|了|在|我|你|他|她|它|们|这|那|有|没|不|很|也|都|就|会|能|要|可以|应该|必须|如果|因为|所以|但是|然后|或者|而且|虽然|不过|除了|包括|关于|对于|由于|通过|根据|按照|为了|以便|以免|以防|万一|一旦|只要|除非|无论|不管|尽管|即使|哪怕|好像|似乎|大概|可能|也许|肯定|一定|当然|显然|明显|确实|真的|实际|事实|其实|本来|原来|后来|现在|将来|过去|今天|明天|昨天|上午|下午|晚上|早上|中午|深夜|春天|夏天|秋天|冬天|年|月|日|时|分|秒|小时|分钟|秒钟|星期|礼拜|周末)\b/gi
+    };
+
+    // Clean text by removing parenthetical explanations which often mix languages
+    let cleanText = text.replace(/\([^)]*\)/g, ''); // Remove content in parentheses
+    cleanText = cleanText.replace(/\[[^\]]*\]/g, ''); // Remove content in brackets
+
+    let maxMatches = 0;
+    let detectedLang = 'english'; // default
+
+    for (const [lang, pattern] of Object.entries(patterns)) {
+        const matches = (cleanText.match(pattern) || []).length;
+        if (matches > maxMatches) {
+            maxMatches = matches;
+            detectedLang = lang;
+        }
+    }
+
+    // Special detection for Dutch responses that might start with common Dutch words
+    if (cleanText.toLowerCase().match(/^(ja|nee|hallo|dag|goedemorgen|natuurlijk|zeker|inderdaad|precies)/)) {
+        detectedLang = 'dutch';
+    }
+
+    console.log(`🔍 Language detection: '${cleanText.substring(0, 50)}...' → ${detectedLang} (${maxMatches} matches)`);
+    return detectedLang;
+}
+
+function getVoiceForLanguage(language) {
+    // Voice mapping that matches the AudioEngine VOICE_MODELS
+    const voiceMap = {
+        'dutch': { lang: 'nl-NL', name: 'dutch' },
+        'english': { lang: 'en-US', name: 'english' },
+        'german': { lang: 'de-DE', name: 'german' },
+        'french': { lang: 'fr-FR', name: 'french' },
+        'spanish': { lang: 'es-ES', name: 'spanish' },
+        'japanese': { lang: 'ja-JP', name: 'japanese' },
+        'chinese': { lang: 'zh-CN', name: 'chinese' }
+    };
+
+    return voiceMap[language] || voiceMap['english'];
+}
+
+async function speakMessage(text) {
+    try {
+        // Detect language of the text
+        const detectedLang = detectLanguage(text);
+        console.log(`🔊 Generating high-quality speech for: ${detectedLang}`);
+
+        // Generate speech using backend edge-tts
+        const response = await fetch('/api/generate_speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                language: detectedLang,
+                user_id: 'anonymous'
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.audio_url) {
+                // Create and play audio element
+                const audio = new Audio(data.audio_url);
+                audio.volume = 0.8;
+
+                // Add loading state
+                const speakButtons = document.querySelectorAll('.btn-message-action');
+                speakButtons.forEach(btn => {
+                    if (btn.innerHTML.includes('fa-volume-up')) {
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        btn.disabled = true;
+                    }
+                });
+
+                // Handle audio playback with user interaction requirements
+                const playAudio = async () => {
+                    try {
+                        await audio.play();
+                        console.log(`✅ Playing high-quality ${detectedLang} audio`);
+
+                        // Reset buttons when audio finishes
+                        audio.onended = () => {
+                            speakButtons.forEach(btn => {
+                                if (btn.innerHTML.includes('fa-spinner')) {
+                                    btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                    btn.disabled = false;
+                                }
+                            });
+                        };
+
+                    } catch (playError) {
+                        if (playError.name === 'NotAllowedError') {
+                            console.log('🔊 Audio requires user interaction, showing play button');
+                            // Show a play button for user to click
+                            speakButtons.forEach(btn => {
+                                if (btn.innerHTML.includes('fa-spinner')) {
+                                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                                    btn.disabled = false;
+                                    btn.title = 'Click to play audio';
+                                    btn.onclick = async () => {
+                                        try {
+                                            await audio.play();
+                                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                            btn.title = 'Listen to response (High Quality)';
+                                            btn.onclick = () => speakMessage(text);
+                                        } catch (err) {
+                                            console.error('Manual audio play failed:', err);
+                                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                            btn.title = 'Audio playback failed';
+                                        }
+                                    };
+                                }
+                            });
+                        } else {
+                            throw playError;
+                        }
+                    }
+                };
+
+                // Handle audio errors
+                audio.onerror = () => {
+                    console.error('Audio loading failed');
+                    speakButtons.forEach(btn => {
+                        if (btn.innerHTML.includes('fa-spinner')) {
+                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                            btn.disabled = false;
+                        }
+                    });
+                };
+
+                // Try to play the audio
+                await playAudio();
+
+            } else {
+                throw new Error('Invalid response from speech generation');
+            }
+        } else {
+            throw new Error('Failed to generate speech');
+        }
+
+    } catch (error) {
+        console.error('Speech generation failed:', error);
+        // Fallback to browser speech synthesis if backend fails
+        fallbackSpeechSynthesis(text);
+    }
+}
+
+function fallbackSpeechSynthesis(text) {
+    if ('speechSynthesis' in window) {
+        console.log('🔄 Falling back to browser speech synthesis');
+        speechSynthesis.cancel();
+
+        const detectedLang = detectLanguage(text);
+        const voiceConfig = getVoiceForLanguage(detectedLang);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 0.8;
+        utterance.lang = voiceConfig.lang;
+
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            const preferredVoice = voices.find(voice =>
+                voice.lang === voiceConfig.lang || voice.lang.startsWith(voiceConfig.lang.split('-')[0])
+            );
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+        }
+
+        speechSynthesis.speak(utterance);
+    }
+}
+
+// Clear chat functionality
+function clearChat() {
+    chatMessages.innerHTML = '';
+    addWelcomeMessage();
+}
+
+// Track user interaction for audio playback
+let userHasInteracted = false;
+
+// Initialize audio context on first user interaction
+function initializeAudioContext() {
+    if (!userHasInteracted) {
+        userHasInteracted = true;
+        console.log('🔊 User interaction detected, audio context ready');
+    }
+}
+
+// Add event listeners for user interaction
+document.addEventListener('click', initializeAudioContext, { once: true });
+document.addEventListener('keydown', initializeAudioContext, { once: true });
+document.addEventListener('touchstart', initializeAudioContext, { once: true });
+
+// Assessment Panel Management
+class AssessmentPanel {
+    constructor() {
+        this.panel = document.getElementById('assessmentPanel');
+        this.isActive = false;
+        this.conversationHistory = [];
+        this.currentExpert = 'language';
+        this.currentUserId = 'unknown';
+        this.isDragging = false;
+        this.isMinimized = false;
+        this.latestAssessment = null;
+
+        this.initializeElements();
+        this.setupEventListeners();
+        this.setupDragging();
+    } initializeElements() {
+        // Get all assessment UI elements
+        this.elements = {
+            overallScore: document.getElementById('overallScore'),
+            performanceLevel: document.getElementById('performanceLevel'),
+            grammarScore: document.getElementById('grammarScore'),
+            fluencyScore: document.getElementById('fluencyScore'),
+            vocabularyLevel: document.getElementById('vocabularyLevel'),
+            languageTips: document.getElementById('languageTips'),
+            conversationTips: document.getElementById('conversationTips'),
+            expertTips: document.getElementById('expertTips'),
+            messageCount: document.getElementById('messageCount'),
+            engagementLevel: document.getElementById('engagementLevel'),
+            learningMomentum: document.getElementById('learningMomentum'),
+            closeBtn: document.getElementById('closeAssessment'),
+            helpBtn: document.getElementById('getHelpBtn'),
+            practiceBtn: document.getElementById('practiceMoreBtn'),
+            reviewBtn: document.getElementById('reviewErrorsBtn')
+        };
+
+        // Clear initial content
+        this.clearAssessmentData();
+    }
+
+    setupEventListeners() {
+        // Close panel
+        this.elements.closeBtn?.addEventListener('click', () => {
+            this.hide();
+        });
+
+        // Toggle button in chat header
+        const toggleBtn = document.getElementById('toggleAssessment');
+        toggleBtn?.addEventListener('click', () => {
+            this.toggle();
+            toggleBtn.classList.toggle('active', this.isActive);
+        });
+
+        // Minimize button
+        const minimizeBtn = document.getElementById('minimizeBtn');
+        minimizeBtn?.addEventListener('click', () => {
+            this.minimize();
+        });
+
+        // Quick action buttons
+        this.elements.helpBtn?.addEventListener('click', () => {
+            this.showHelp();
+        });
+
+        this.elements.practiceBtn?.addEventListener('click', () => {
+            this.suggestPractice();
+        });
+
+        this.elements.reviewBtn?.addEventListener('click', () => {
+            this.reviewErrors();
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isActive) {
+                this.hide();
+            }
+        });
+    }
+
+    setupDragging() {
+        const header = this.panel?.querySelector('.assessment-header');
+        if (!header) return;
+
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('btn-close')) return;
+
+            isDragging = true;
+            const rect = this.panel.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+
+            this.panel.style.transition = 'none';
+            header.style.cursor = 'grabbing';
+        });
+
+        const handleMouseMove = (e) => {
+            if (!isDragging) return;
+
+            const x = e.clientX - dragOffset.x;
+            const y = e.clientY - dragOffset.y;
+
+            // Keep panel within viewport bounds
+            const maxX = window.innerWidth - this.panel.offsetWidth;
+            const maxY = window.innerHeight - this.panel.offsetHeight;
+
+            const boundedX = Math.max(0, Math.min(x, maxX));
+            const boundedY = Math.max(0, Math.min(y, maxY));
+
+            this.panel.style.left = `${boundedX}px`;
+            this.panel.style.top = `${boundedY}px`;
+            this.panel.style.right = 'auto';
+        };
+
+        const handleMouseUp = () => {
+            isDragging = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            this.panel.style.transition = '';
+            header.style.cursor = 'move';
+        };
+    }
+
+    show() {
+        this.panel.classList.add('active');
+        this.panel.classList.remove('minimized');
+        this.isActive = true;
+        this.isMinimized = false;
+
+        // Clear any existing data first
+        this.clearAssessmentData();
+
+        // Update toggle button state
+        const toggleBtn = document.getElementById('toggleAssessment');
+        if (toggleBtn) toggleBtn.classList.add('active');
+
+        console.log('📊 Assessment panel opened at position:', {
+            top: this.panel.style.top || 'default',
+            right: this.panel.style.right || 'default',
+            display: window.getComputedStyle(this.panel).display,
+            zIndex: window.getComputedStyle(this.panel).zIndex
+        });
+    }
+
+    hide() {
+        this.panel.classList.remove('active');
+        this.panel.classList.remove('minimized');
+        this.isActive = false;
+        this.isMinimized = false;
+
+        // Update toggle button state
+        const toggleBtn = document.getElementById('toggleAssessment');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+
+        console.log('📊 Assessment panel closed');
+    }
+
+    minimize() {
+        if (this.isMinimized) {
+            this.panel.classList.remove('minimized');
+            this.isMinimized = false;
+        } else {
+            this.panel.classList.add('minimized');
+            this.isMinimized = true;
+        }
+        console.log(`📊 Assessment panel ${this.isMinimized ? 'minimized' : 'restored'}`);
+    }
+
+    toggle() {
+        if (this.isActive) {
+            this.hide();
+        } else {
+            this.show();
+        }
+    }
+
+    updateContext(userId, expert, conversationHistory) {
+        this.currentUserId = userId || 'unknown';
+        this.currentExpert = expert || 'language';
+        this.conversationHistory = conversationHistory || [];
+
+        // Update basic stats immediately
+        this.updateBasicStats();
+    }
+
+    updateBasicStats() {
+        const userMessages = this.conversationHistory.filter(msg => msg.role === 'user');
+        const messageCount = userMessages.length;
+
+        if (this.elements.messageCount) {
+            this.elements.messageCount.textContent = messageCount;
+        }
+
+        // Simple engagement calculation
+        let engagement = 'Low';
+        if (messageCount > 5) engagement = 'High';
+        else if (messageCount > 2) engagement = 'Medium';
+
+        if (this.elements.engagementLevel) {
+            this.elements.engagementLevel.textContent = engagement;
+        }
+
+        // Learning momentum
+        let momentum = 'Starting';
+        if (messageCount > 5) momentum = 'Strong';
+        else if (messageCount > 2) momentum = 'Building';
+
+        if (this.elements.learningMomentum) {
+            this.elements.learningMomentum.textContent = momentum;
+        }
+    }
+
+    async updateAssessment(currentMessage) {
+        try {
+            console.log(`📊 Analyzing message: "${currentMessage.substring(0, 50)}..."`);
+
+            // Show loading state if panel is visible
+            if (this.isActive) {
+                this.showLoadingState();
+            }
+
+            const response = await fetch('/api/assessment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUserId,
+                    expert: this.currentExpert,
+                    conversation_history: this.conversationHistory,
+                    current_message: currentMessage
+                })
+            });
+
+            const assessment = await response.json();
+
+            if (assessment.error) {
+                console.warn('Assessment error:', assessment.error);
+                if (this.isActive) {
+                    this.showFallbackAssessment(assessment.fallback_assessment);
+                }
+                return;
+            }
+
+            // Store the latest assessment data
+            this.latestAssessment = assessment;
+
+            // Display immediately if panel is visible
+            if (this.isActive) {
+                this.displayAssessment(assessment);
+            }
+
+            console.log('📊 Assessment updated successfully');
+
+        } catch (error) {
+            console.error('Failed to get assessment:', error);
+            if (this.isActive) {
+                this.showFallbackAssessment();
+            }
+        }
+    }
+
+    showLoadingState() {
+        if (this.elements.performanceLevel) {
+            this.elements.performanceLevel.textContent = 'Analyseren...';
+        }
+
+        // Show loading in hints
+        if (this.elements.languageTips) {
+            this.elements.languageTips.innerHTML = '<li>🔄 Analyseren van je Nederlands...</li>';
+        }
+    }
+
+    show() {
+        this.panel.classList.add('active');
+        this.panel.classList.remove('minimized');
+        this.isActive = true;
+        this.isMinimized = false;
+
+        // Show latest assessment if available, otherwise clear
+        if (this.latestAssessment) {
+            this.displayAssessment(this.latestAssessment);
+        } else {
+            this.clearAssessmentData();
+        }
+
+        // Update toggle button state
+        const toggleBtn = document.getElementById('toggleAssessment');
+        if (toggleBtn) toggleBtn.classList.add('active');
+
+        console.log('📊 Assessment panel opened');
+    }
+
+    displayAssessment(assessment) {
+        console.log('📊 Displaying assessment for message:', assessment);
+
+        // Update overall score
+        const overall = assessment.overall_score || {};
+        const score = overall.overall_score || 0;
+        const level = overall.performance_level || 'developing';
+
+        if (this.elements.overallScore) {
+            const scoreNumber = this.elements.overallScore.querySelector('.score-number');
+            if (scoreNumber) {
+                scoreNumber.textContent = score.toFixed(1);
+                // Add visual feedback for score changes
+                scoreNumber.style.animation = 'none';
+                setTimeout(() => {
+                    scoreNumber.style.animation = 'pulse 0.5s ease-in-out';
+                }, 10);
+            }
+        }
+
+        if (this.elements.performanceLevel) {
+            this.elements.performanceLevel.textContent = this.capitalize(level);
+            // Color code the performance level
+            const colors = {
+                'excellent': '#4CAF50',
+                'good': '#2196F3',
+                'developing': '#FF9800',
+                'beginner': '#F44336'
+            };
+            this.elements.performanceLevel.style.color = colors[level] || '#007acc';
+        }
+
+        // Update language metrics
+        const language = assessment.language_analysis || {};
+
+        if (this.elements.grammarScore && language.grammar_score !== undefined) {
+            this.elements.grammarScore.textContent = language.grammar_score;
+            this.updateMetricBar('grammar', language.grammar_score);
+        }
+
+        if (this.elements.fluencyScore && language.fluency_score !== undefined) {
+            this.elements.fluencyScore.textContent = language.fluency_score;
+            this.updateMetricBar('fluency', language.fluency_score);
+        }
+
+        if (this.elements.vocabularyLevel && language.vocabulary_level) {
+            this.elements.vocabularyLevel.textContent = this.capitalize(language.vocabulary_level);
+        }
+
+        // Update corrections and improved version
+        this.updateCorrections(language);
+
+        // Update hints
+        const hints = assessment.hints || {};
+        this.updateHints(hints);
+
+        // Update conversation flow stats
+        const flow = assessment.conversation_flow || {};
+        if (flow.engagement_level && this.elements.engagementLevel) {
+            this.elements.engagementLevel.textContent = this.capitalize(flow.engagement_level);
+        }
+
+        const progress = assessment.learning_progress || {};
+        if (progress.learning_momentum && this.elements.learningMomentum) {
+            this.elements.learningMomentum.textContent = this.capitalize(progress.learning_momentum);
+        }
+
+        console.log('📊 Assessment updated successfully');
+    }
+
+    updateMetricBar(metric, score) {
+        const bar = document.querySelector(`[data-metric="${metric}"]`);
+        if (bar) {
+            const percentage = Math.max(0, Math.min(100, (score / 10) * 100));
+            bar.style.width = `${percentage}%`;
+        }
+    }
+
+    updateHints(hints) {
+        const updates = [
+            { element: this.elements.languageTips, tips: hints.language_tips },
+            { element: this.elements.conversationTips, tips: hints.conversation_tips },
+            { element: this.elements.expertTips, tips: hints.expert_tips }
+        ];
+
+        updates.forEach(({ element, tips }) => {
+            if (element && tips && Array.isArray(tips)) {
+                element.innerHTML = tips.map(tip => `<li>${tip}</li>`).join('');
+            }
+        });
+    }
+
+    updateCorrections(languageAnalysis) {
+        const correctionsSection = document.getElementById('correctionsSection');
+        const errorsList = document.getElementById('errorsList');
+        const correctionsList = document.getElementById('correctionsList');
+        const improvedText = document.getElementById('improvedText');
+        const explanation = document.getElementById('explanation');
+
+        if (!languageAnalysis) return;
+
+        const hasCorrections = (languageAnalysis.errors && languageAnalysis.errors.length > 0) ||
+            (languageAnalysis.corrections && languageAnalysis.corrections.length > 0) ||
+            languageAnalysis.improved_version;
+
+        if (hasCorrections) {
+            // Show the corrections section
+            if (correctionsSection) {
+                correctionsSection.style.display = 'block';
+            }
+
+            // Update errors list
+            if (errorsList && languageAnalysis.errors && languageAnalysis.errors.length > 0) {
+                errorsList.innerHTML = languageAnalysis.errors.map(error => `<li>${error}</li>`).join('');
+            } else if (errorsList) {
+                errorsList.innerHTML = '<li>Geen specifieke fouten gevonden</li>';
+            }
+
+            // Update corrections list
+            if (correctionsList && languageAnalysis.corrections && languageAnalysis.corrections.length > 0) {
+                correctionsList.innerHTML = languageAnalysis.corrections.map(correction => `<li>${correction}</li>`).join('');
+            } else if (correctionsList) {
+                correctionsList.innerHTML = '<li>Geen specifieke correcties</li>';
+            }
+
+            // Update improved version
+            if (improvedText && languageAnalysis.improved_version) {
+                improvedText.textContent = languageAnalysis.improved_version;
+            }
+
+            // Update explanation
+            if (explanation && languageAnalysis.explanation) {
+                explanation.textContent = languageAnalysis.explanation;
+            }
+
+            console.log('📝 Grammar corrections updated');
+        } else {
+            // Hide the corrections section if no corrections needed
+            if (correctionsSection) {
+                correctionsSection.style.display = 'none';
+            }
+        }
+    }
+
+    showFallbackAssessment(fallback) {
+        const level = fallback?.overall_score?.performance_level || 'developing';
+        const suggestions = fallback?.hints?.quick_suggestions || ['Keep practicing!'];
+
+        if (this.elements.performanceLevel) {
+            this.elements.performanceLevel.textContent = this.capitalize(level);
+        }
+
+        if (this.elements.languageTips) {
+            this.elements.languageTips.innerHTML = suggestions.map(tip => `<li>${tip}</li>`).join('');
+        }
+    }
+
+    capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    clearAssessmentData() {
+        // Clear all assessment displays
+        if (this.elements.performanceLevel) {
+            this.elements.performanceLevel.textContent = 'Begin een gesprek voor beoordeling';
+        }
+
+        const scoreNumber = this.elements.overallScore?.querySelector('.score-number');
+        if (scoreNumber) scoreNumber.textContent = '-';
+
+        if (this.elements.grammarScore) this.elements.grammarScore.textContent = '-';
+        if (this.elements.fluencyScore) this.elements.fluencyScore.textContent = '-';
+        if (this.elements.vocabularyLevel) this.elements.vocabularyLevel.textContent = '-';
+
+        // Clear metric bars
+        this.updateMetricBar('grammar', 0);
+        this.updateMetricBar('fluency', 0);
+
+        // Clear hints - conversation focused
+        if (this.elements.languageTips) {
+            this.elements.languageTips.innerHTML = '<li>Start een gesprek met een expert</li>';
+        }
+        if (this.elements.conversationTips) {
+            this.elements.conversationTips.innerHTML = '<li>Praat Nederlands met de expert</li>';
+        }
+        if (this.elements.expertTips) {
+            this.elements.expertTips.innerHTML = '<li>Realtime feedback tijdens gesprek</li>';
+        }
+    }
+
+
+
+    // Quick action handlers
+    showHelp() {
+        const helpMessage = `Assessment Help:\n\n• Grammar/Fluency scores (0-10)\n• Vocabulary levels: Beginner → Advanced\n• Real-time tips based on your conversation\n• Progress tracking per session\n\nTip: Keep chatting to get better feedback!`;
+        alert(helpMessage);
+    }
+
+    suggestPractice() {
+        const practices = [
+            'Try asking follow-up questions',
+            'Use more complex sentence structures',
+            'Practice with technical vocabulary',
+            'Focus on pronunciation',
+            'Engage in longer conversations'
+        ];
+
+        const suggestion = practices[Math.floor(Math.random() * practices.length)];
+        alert(`Practice Suggestion:\n\n${suggestion}\n\nKeep up the great work!`);
+    }
+
+    reviewErrors() {
+        // This could show a summary of common errors
+        alert('Error Review:\n\nBased on your conversation:\n• Grammar improvements available\n• Vocabulary expansion opportunities\n• Pronunciation practice recommended\n\nCheck the hints panel for specific tips!');
+    }
+}
+
+// Initialize assessment panel
+const assessmentPanel = new AssessmentPanel();
+
+// Setup assessment panel for Talk Experts tab
+function setupAssessmentForExperts() {
+    // Add assessment toggle button in status bar
+    const testBtn = document.getElementById('testAssessment');
+    if (testBtn) {
+        testBtn.addEventListener('click', () => {
+            console.log('📊 Toggling assessment panel');
+            assessmentPanel.toggle();
+        });
+    }
+
+    // Hide assessment panel when switching away from experts
+    document.querySelectorAll('.tab:not([data-tab="experts"])').forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (assessmentPanel.isActive) {
+                assessmentPanel.hide();
+            }
+        });
+    });
+}// Initialize chat with welcome message
+document.addEventListener('DOMContentLoaded', () => {
+    // Add welcome message after a short delay
+    setTimeout(() => {
+        addWelcomeMessage();
+        setupAssessmentForExperts();
+
+        // Debug: Test panel visibility
+        const panel = document.getElementById('assessmentPanel');
+        console.log('🔍 Assessment panel element:', panel);
+        console.log('🔍 Panel computed styles:', panel ? {
+            display: window.getComputedStyle(panel).display,
+            position: window.getComputedStyle(panel).position,
+            zIndex: window.getComputedStyle(panel).zIndex,
+            right: window.getComputedStyle(panel).right,
+            top: window.getComputedStyle(panel).top
+        } : 'NOT FOUND');
+        console.log('🔍 Toggle button element:', document.getElementById('toggleAssessment'));
+        console.log('🔍 Test button element:', document.getElementById('testAssessment'));
+
+        // Assessment panel is ready for real conversations
+        console.log('📊 Assessment panel ready for conversations');
+    }, 1000);
+});
+

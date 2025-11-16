@@ -1,0 +1,454 @@
+[
+  {
+    "timestamp": "2025-11-16T21:38:16.748248",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 5,
+      "vocabulary_level": "intermediate",
+      "fluency_score": 5,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Je probeert Nederlands te spreken!"
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 1,
+      "avg_message_length": 16.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 1,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": {
+      "language_tips": [
+        "Oefen dagelijks Nederlands",
+        "Lees Nederlandse teksten"
+      ],
+      "conversation_tips": [
+        "Stel open vragen",
+        "Luister actief"
+      ],
+      "expert_tips": [
+        "Gebruik medische terminologie",
+        "Spreek duidelijk en professioneel",
+        "Stel patiëntgerichte vragen"
+      ],
+      "quick_suggestions": [
+        "Spreek langzaam en duidelijk",
+        "Maak oogcontact",
+        "Gebruik gebaren"
+      ]
+    },
+    "overall_score": {
+      "overall_score": 3.7,
+      "performance_level": "developing",
+      "key_strengths": [
+        "Je probeert Nederlands te spreken!"
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:02:27.862518",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 5,
+      "vocabulary_level": "intermediate",
+      "fluency_score": 5,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Je probeert Nederlands te spreken!"
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 1,
+      "avg_message_length": 11.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 1,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": {
+      "language_tips": [
+        "Oefen dagelijks Nederlands",
+        "Lees Nederlandse teksten"
+      ],
+      "conversation_tips": [
+        "Stel open vragen",
+        "Luister actief"
+      ],
+      "expert_tips": [
+        "Gebruik medische terminologie",
+        "Spreek duidelijk en professioneel",
+        "Stel patiëntgerichte vragen"
+      ],
+      "quick_suggestions": [
+        "Spreek langzaam en duidelijk",
+        "Maak oogcontact",
+        "Gebruik gebaren"
+      ]
+    },
+    "overall_score": {
+      "overall_score": 3.7,
+      "performance_level": "developing",
+      "key_strengths": [
+        "Je probeert Nederlands te spreken!"
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:03:22.148449",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 5,
+      "vocabulary_level": "intermediate",
+      "fluency_score": 5,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Je probeert Nederlands te spreken!"
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 2,
+      "avg_message_length": 79.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 4,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 2,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": {
+      "language_tips": [
+        "Oefen dagelijks Nederlands",
+        "Lees Nederlandse teksten"
+      ],
+      "conversation_tips": [
+        "Stel open vragen",
+        "Luister actief"
+      ],
+      "expert_tips": [
+        "Gebruik medische terminologie",
+        "Spreek duidelijk en professioneel",
+        "Stel patiëntgerichte vragen"
+      ],
+      "quick_suggestions": [
+        "Spreek langzaam en duidelijk",
+        "Maak oogcontact",
+        "Gebruik gebaren"
+      ]
+    },
+    "overall_score": {
+      "overall_score": 3.7,
+      "performance_level": "developing",
+      "key_strengths": [
+        "Je probeert Nederlands te spreken!"
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:13:37.660852",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 10,
+      "vocabulary_level": "beginner",
+      "fluency_score": 10,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Correct gebruik van basisgrammatica",
+        "Eenvoudige en directe uitspraak"
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 1,
+      "avg_message_length": 11.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 1,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": null,
+    "overall_score": {
+      "overall_score": 7.0,
+      "performance_level": "good",
+      "key_strengths": [
+        "Correct gebruik van basisgrammatica",
+        "Eenvoudige en directe uitspraak"
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:15:52.605750",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 10,
+      "vocabulary_level": "beginner",
+      "fluency_score": 10,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Correct gebruik van de Nederlandse groet 'hallo'."
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 2,
+      "avg_message_length": 8.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 2,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": null,
+    "overall_score": {
+      "overall_score": 7.0,
+      "performance_level": "good",
+      "key_strengths": [
+        "Correct gebruik van de Nederlandse groet 'hallo'."
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:21:58.522405",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 10,
+      "vocabulary_level": "beginner",
+      "fluency_score": 9,
+      "errors": [],
+      "corrections": [],
+      "strengths": [
+        "Direct en begrijpelijk",
+        "Gebruikt een idiomatische uitdrukking"
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 1,
+      "avg_message_length": 26.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 1,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": null,
+    "overall_score": {
+      "overall_score": 6.7,
+      "performance_level": "good",
+      "key_strengths": [
+        "Direct en begrijpelijk",
+        "Gebruikt een idiomatische uitdrukking"
+      ],
+      "focus_areas": []
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:23:15.302351",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 6,
+      "vocabulary_level": "beginner",
+      "fluency_score": 4,
+      "errors": [
+        "Onjuiste spelling: 'vandag' moet 'vandaag' zijn.",
+        "Onjuiste hoofdlettergebruik: 'ik' moet 'Ik' zijn."
+      ],
+      "corrections": [
+        "Ik heb andere ziekten ook, maar vandaag heb ik hoofdpijn."
+      ],
+      "strengths": [
+        "De zinsstructuur is redelijk correct."
+      ]
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 2,
+      "avg_message_length": 41.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 2,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": null,
+    "overall_score": {
+      "overall_score": 3.7,
+      "performance_level": "developing",
+      "key_strengths": [
+        "De zinsstructuur is redelijk correct."
+      ],
+      "focus_areas": [
+        "Onjuiste spelling: 'vandag' moet 'vandaag' zijn.",
+        "Onjuiste hoofdlettergebruik: 'ik' moet 'Ik' zijn."
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-16T22:31:13.413283",
+    "user_id": "anonymous",
+    "expert": "healthcare",
+    "language_analysis": {
+      "grammar_score": 2,
+      "vocabulary_level": "beginner",
+      "fluency_score": 2,
+      "errors": [
+        "Verkeerde werkwoordsvorm: 'ziekte' is een zelfstandig naamwoord, 'ziek' is de bijvoeglijke naamwoordvorm die hier nodig is.",
+        "Onjuiste zinsbouw: Het zou beter zijn om te zeggen 'Ik ben ziek vandaag'."
+      ],
+      "corrections": [
+        "ziek",
+        "Ik ben ziek vandaag"
+      ],
+      "improved_version": "Ik ben ziek vandaag.",
+      "explanation": "De belangrijkste verbetering is het gebruik van de juiste werkwoordsvorm 'ziek' in plaats van het zelfstandig naamwoord 'ziekte'. De zinsbouw is ook verbeterd door 'Ik ben ziek vandaag' te gebruiken in plaats van de oorspronkelijke volgorde.",
+      "strengths": []
+    },
+    "conversation_flow": {
+      "engagement_level": "low",
+      "turn_count": 1,
+      "avg_message_length": 21.0,
+      "topic_consistency": "developing"
+    },
+    "expert_specific": {
+      "domain": "healthcare",
+      "medical_vocabulary_used": 0,
+      "professional_tone_score": 1,
+      "scenario_relevance": "medium",
+      "specific_skills": [
+        "Basis communicatie",
+        "Patiënt-professional interactie",
+        "Nederlandse zorgcultuur"
+      ]
+    },
+    "learning_progress": {
+      "session_messages": 1,
+      "total_historical_messages": 0,
+      "improvement_trend": "stable",
+      "learning_momentum": "starting"
+    },
+    "hints": null,
+    "overall_score": {
+      "overall_score": 1.7,
+      "performance_level": "developing",
+      "key_strengths": [],
+      "focus_areas": [
+        "Verkeerde werkwoordsvorm: 'ziekte' is een zelfstandig naamwoord, 'ziek' is de bijvoeglijke naamwoordvorm die hier nodig is.",
+        "Onjuiste zinsbouw: Het zou beter zijn om te zeggen 'Ik ben ziek vandaag'."
+      ]
+    }
+  }
+]

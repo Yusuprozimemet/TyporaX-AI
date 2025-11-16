@@ -1,8 +1,6 @@
 # agents/lesson_bot.py
 # ================================================
-# GeneLingua Lesson Bot – FINAL, BULLETPROOF
-# Author: @Yusufrozimemet (NL) – November 15, 2025
-# Time: 03:40 PM CET
+
 # FIXED: re.Match → .group(1), Gemma parsing, dedupe, output
 # ================================================
 

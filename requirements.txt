@@ -4,38 +4,29 @@ fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
 jinja2>=3.1.2
-# LLM / generation
-transformers>=4.45
-torch>=2.3,<2.10          # 2.9.x works on 3.13, 2.10+ still building
-vllm>=0.6
-accelerate
 
 # ──────────────────────────────────────────────────────────────
-# Voice to text (optional – remove if you never use voice_file)
-openai-whisper>=20231117
+# AI/LLM API (using HuggingFace API instead of local models)
+requests>=2.31.0
+python-dotenv>=1.0.0
 
 # ──────────────────────────────────────────────────────────────
-# Audio synthesis
-edge-tts
+# Audio synthesis (text-to-speech)
+edge-tts>=6.1.0
 
 # ──────────────────────────────────────────────────────────────
-# PDF / HTML rendering
-reportlab
+# PDF generation
+reportlab>=4.0.0
 
 # ──────────────────────────────────────────────────────────────
-# Data / plotting
-pandas
-matplotlib
-seaborn
-scipy
-numpy
+# Data analysis & plotting (for DNA/progress visualization)
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+scipy>=1.11.0
+numpy>=1.24.0
 
-# ──────────────────────────────────────────────────────────────
-# Misc utilities
-requests
-python-dotenv
-pytesseract
-opencv-python
-pillow
-gspread
-oauth2client
+pyaudio 
+SpeechRecognition 
+pydub
+httpx
