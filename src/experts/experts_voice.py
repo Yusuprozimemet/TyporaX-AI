@@ -6,6 +6,7 @@
 
 from it_backend_interviewer import run_backend_interview, INTERVIEW_SCENARIOS
 from healthcare_expert import run_healthcare_conversation, HEALTHCARE_SCENARIOS
+from dutch_podcast_expert import generate_podcast_response, get_continuous_podcast_response, podcast_conversation
 import os
 import asyncio
 import tempfile
@@ -497,3 +498,144 @@ Note: pyaudio may require additional system packages:
 
     # Run interactive menu
     asyncio.run(interactive_menu())
+
+
+# === Podcast Functionality ===
+
+async def play_podcast(podcast_data):
+    """
+    Play podcast with real-time audio for both speakers
+
+    Args:
+        podcast_data: Dict containing podcast conversation data
+    """
+    voice_engine = VoiceInteractionEngine("dutch")
+
+    for segment in podcast_data.get('transcript', []):
+        print(f"\n{segment['speaker']}: {segment['content']}")
+        await voice_engine.text_to_speech(segment['content'])
+
+
+class PodcastSession:
+    """
+    Manages interactive Dutch podcast session with real-time conversation
+    """
+
+    def __init__(self):
+        self.voice_engine = VoiceInteractionEngine("dutch")
+        self.is_active = False
+        self.current_topic = ""
+
+    async def start_interactive_podcast(self, initial_topic: str = None):
+        """Start interactive podcast session"""
+        print("\n" + "="*70)
+        print("🎙️ NEDERLANDSE PODCAST - INTERACTIEVE SESSIE".center(70))
+        print("="*70)
+        print("\n📻 Welkom bij de Nederlandse Podcast!")
+        print("👥 Hosts: Emma & Daan")
+        print("💬 Je kunt op elk moment onderbreken en vragen stellen")
+        print("🛑 Zeg 'stop podcast' om te stoppen")
+        print("\n" + "-"*70)
+
+        # Get initial topic if not provided
+        if not initial_topic:
+            initial_topic = input(
+                "\n🎯 Waar wil je over praten? Typ je onderwerp: ").strip()
+            if not initial_topic:
+                initial_topic = "interessante technologie trends"
+
+        self.current_topic = initial_topic
+        self.is_active = True
+
+        print(f"\n🎬 Starting podcast over: {initial_topic}")
+        print("\n" + "="*70 + "\n")
+
+        # Start podcast
+        response = await generate_podcast_response(initial_topic, [])
+        await self._handle_podcast_response(response)
+
+        # Start conversation loop
+        await self._podcast_conversation_loop()
+
+    async def _handle_podcast_response(self, response: Dict):
+        """Handle and play podcast response"""
+        if response.get("type") == "podcast_error":
+            print(f"❌ {response.get('message', 'Er ging iets mis')}")
+            return
+
+        if response.get("type") == "podcast_end":
+            print(f"\n🎙️ {response.get('message', 'Podcast beëindigd')}")
+            self.is_active = False
+            return
+
+        speaker = response.get("speaker", "Host")
+        message = response.get("message", "")
+
+        print(f"\n🎙️ {speaker}: {message}")
+
+        # Generate audio if needed
+        if response.get("audio_needed", False):
+            voice = response.get("voice", "nl-NL-ColetteNeural")
+            # Create TTS engine with specific voice
+            temp_engine = VoiceInteractionEngine("dutch")
+            temp_engine.voice_models["dutch"] = voice
+            await temp_engine.text_to_speech(message)
+
+    async def _podcast_conversation_loop(self):
+        """Main podcast conversation loop"""
+        continuous_timer = 0
+        max_wait_time = 8  # seconds to wait before continuing automatically
+
+        while self.is_active:
+            try:
+                print(
+                    "\n💭 [Podcast loopt door... Onderbreek door te praten of wacht]")
+
+                # Listen for user interruption (shorter timeout for responsiveness)
+                user_input = self.voice_engine.listen(
+                    timeout=3, phrase_time_limit=15)
+
+                if user_input:
+                    continuous_timer = 0  # Reset timer
+
+                    # Check for stop command
+                    if any(word in user_input.lower() for word in ["stop", "einde", "stoppen"]):
+                        response = await generate_podcast_response("stop", [])
+                        await self._handle_podcast_response(response)
+                        break
+
+                    # User interruption
+                    print(f"\n🗣️ Je: {user_input}")
+                    response = await generate_podcast_response(user_input, [])
+                    await self._handle_podcast_response(response)
+
+                else:
+                    # No user input, continue podcast naturally
+                    continuous_timer += 3
+
+                    if continuous_timer >= max_wait_time:
+                        # Get next natural response
+                        response = await get_continuous_podcast_response()
+                        if response:
+                            await self._handle_podcast_response(response)
+                        continuous_timer = 0
+
+                        # Add small delay between responses
+                        await asyncio.sleep(2)
+
+            except KeyboardInterrupt:
+                print("\n\n⏹️ Podcast gestopt door gebruiker")
+                self.is_active = False
+                break
+            except Exception as e:
+                print(f"\n❌ Fout in podcast: {e}")
+                await asyncio.sleep(1)
+
+        print("\n🎙️ Nederlandse Podcast sessie beëindigd. Bedankt voor het luisteren!")
+
+
+# Utility function for easy podcast starting
+async def start_dutch_podcast(topic: str = None):
+    """Start Dutch podcast session"""
+    session = PodcastSession()
+    await session.start_interactive_podcast(topic)

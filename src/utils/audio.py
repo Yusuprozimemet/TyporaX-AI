@@ -170,6 +170,29 @@ class AudioEngine:
 
         return audio_bytes
 
+    async def generate_speech_bytes_with_voice(self, text: str, voice: str) -> bytes:
+        """
+        Generate speech as bytes with specific voice model
+
+        Args:
+            text: Text to convert to speech
+            voice: Specific voice model (e.g., "nl-NL-MaartenNeural")
+
+        Returns:
+            Audio bytes
+        """
+        print(f"🎤 AudioEngine: Using voice {voice} for text: '{text[:50]}...'")
+        communicate = edge_tts.Communicate(text, voice)
+        audio_bytes = b""
+
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_bytes += chunk["data"]
+
+        print(
+            f"✅ AudioEngine: Generated {len(audio_bytes)} bytes with voice {voice}")
+        return audio_bytes
+
     def generate_speech_bytes_sync(self, text: str, language: str = "dutch") -> bytes:
         """
         Generate speech as bytes without saving to file (synchronous version)

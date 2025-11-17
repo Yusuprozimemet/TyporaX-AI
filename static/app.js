@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Theme switching: apply CSS variable sets for dark/light/auto and persist selection
-(function() {
+(function () {
     const themeSelect = document.getElementById('theme_select');
     if (!themeSelect) return;
 
@@ -935,7 +935,8 @@ function getExpertIcon() {
     const icons = {
         healthcare: 'fa-user-md',
         interview: 'fa-user-tie',
-        language: 'fa-graduation-cap'
+        language: 'fa-graduation-cap',
+        podcast: 'fa-podcast'
     };
     return icons[currentExpert] || 'fa-robot';
 }
@@ -945,11 +946,16 @@ function addWelcomeMessage() {
     const welcomeMessages = {
         healthcare: "Hallo! Ik ben je Nederlandse zorgexpert. Ik help je graag met medische vragen terwijl we samen je Nederlands verbeteren. Waar kan ik je mee helpen?",
         interview: "Hoi! Ik ben je Nederlandse IT-sollicitatiecoach. Ik help je graag met technische gesprekken in het Netherlands en IT-vocabulaire. Waar wil je aan werken?",
-        language: "Welkom! Ik ben je Nederlandse taalcoach. Ik help je graag met grammatica, uitspraak, Nederlandse cultuur en natuurlijke gesprekken. Wat wil je vandaag leren?"
+        language: "Welkom! Ik ben je Nederlandse taalcoach. Ik help je graag met grammatica, uitspraak, Nederlandse cultuur en natuurlijke gesprekken. Wat wil je vandaag leren?",
+        podcast: "🎙️ Welkom bij de Nederlandse Podcast met Emma & Daan! Geef ons een onderwerp waar je over wilt praten en we beginnen meteen een interactief gesprek. Je kunt op elk moment onderbreken met vragen!"
     };
 
     setTimeout(() => {
-        addMessage(welcomeMessages[currentExpert] || "Hallo! Hoe kan ik je helpen met Nederlands leren?", false, true);
+        // Don't auto-speak for podcast as it will start speaking when user gives topic
+        const shouldSpeak = currentExpert !== 'podcast';
+        const welcomeMessage = welcomeMessages[currentExpert] || "Hallo! Hoe kan ik je helpen met Nederlands leren?";
+        console.log(`👋 Adding welcome message for ${currentExpert}: ${welcomeMessage.substring(0, 50)}...`);
+        addMessage(welcomeMessage, false, shouldSpeak);
     }, 500);
 }
 
@@ -1026,22 +1032,39 @@ async function sendMessage() {
         // Remove typing indicator
         removeTypingIndicator();
 
-        // Add expert response
-        addMessage(data.response, false, true);
+        // Handle podcast responses differently
+        if (currentExpert === 'podcast') {
+            handlePodcastResponse(data);
 
-        // Update conversation history
-        conversationHistory.push({ role: 'assistant', content: data.response });
+            // Start continuous podcast flow after user interaction and current audio finishes
+            const waitAndStart = () => {
+                if (isPlayingAudio || audioQueue.length > 0) {
+                    setTimeout(waitAndStart, 500);
+                } else {
+                    setTimeout(() => {
+                        startContinuousPodcast();
+                    }, 2000); // 2 seconds after audio finishes
+                }
+            };
+            waitAndStart();
+        } else {
+            // Regular expert response
+            addMessage(data.response, false, true);
 
-        // Keep conversation history manageable
-        if (conversationHistory.length > 20) {
-            conversationHistory = conversationHistory.slice(-20);
+            // Update conversation history
+            conversationHistory.push({ role: 'assistant', content: data.response });
+
+            // Keep conversation history manageable
+            if (conversationHistory.length > 20) {
+                conversationHistory = conversationHistory.slice(-20);
+            }
+
+            // Update assessment panel context
+            assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
+
+            // Always trigger assessment update for every user message (real-time analysis)
+            await assessmentPanel.updateAssessment(message);
         }
-
-        // Update assessment panel context
-        assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
-
-        // Always trigger assessment update for every user message (real-time analysis)
-        await assessmentPanel.updateAssessment(message);
     } catch (error) {
         console.error('Error sending message:', error);
         removeTypingIndicator();
@@ -1102,8 +1125,11 @@ function getVoiceForLanguage(language) {
 
 async function speakMessage(text) {
     try {
-        // Detect language of the text
-        const detectedLang = detectLanguage(text);
+        // Clean text by removing speaker labels for speech
+        let cleanText = text.replace(/^(Emma|Daan|both):\s*/i, '');
+
+        // Detect language of the cleaned text
+        const detectedLang = detectLanguage(cleanText);
         console.log(`🔊 Generating high-quality speech for: ${detectedLang}`);
 
         // Generate speech using backend edge-tts
@@ -1113,7 +1139,7 @@ async function speakMessage(text) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: text,
+                text: cleanText,
                 language: detectedLang,
                 user_id: 'anonymous'
             })
@@ -1853,6 +1879,7 @@ function setupAssessmentForExperts() {
 document.addEventListener('DOMContentLoaded', () => {
     // Add welcome message after a short delay
     setTimeout(() => {
+        console.log('🚀 Initial page load - adding welcome message');
         addWelcomeMessage();
         setupAssessmentForExperts();
         checkExistingResources();
@@ -1877,5 +1904,299 @@ document.addEventListener('DOMContentLoaded', () => {
         // Assessment panel is ready for real conversations
         console.log('📊 Assessment panel ready for conversations');
     }, 1000);
+});
+
+
+// === Podcast Functionality ===
+
+let podcastTimeout = null;
+let isPodcastActive = false;
+let currentAudio = null;
+let audioQueue = [];
+let isPlayingAudio = false;
+
+function handlePodcastResponse(data) {
+    const speaker = data.speaker || 'Host';
+    const message = data.response || '';
+    const speakerKey = data.speaker_key || 'host1';
+    const voice = data.voice || 'nl-NL-ColetteNeural';
+
+    console.log(`🎙️ Podcast response from ${speaker}: ${message.substring(0, 50)}...`);
+    console.log(`🔊 Voice for ${speaker}: ${voice}`);
+
+    // Add speaker label to message for clarity
+    const displayMessage = `**${speaker}**: ${message}`;
+
+    // Add to chat with special podcast styling
+    addPodcastMessage(displayMessage, speaker, speakerKey, voice);
+
+    // Mark podcast as active
+    isPodcastActive = true;
+}
+
+function addPodcastMessage(content, speaker, speakerKey, voice) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message expert podcast-message`;
+    messageDiv.dataset.speaker = speakerKey;
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Different avatars for each host
+    const avatarIcon = speakerKey === 'host1' ? 'fa-female' : 'fa-male';
+    const avatarColor = speakerKey === 'host1' ? '#e74c3c' : '#3498db';
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar" style="background-color: ${avatarColor}">
+            <i class="fas ${avatarIcon}"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${content}</div>
+            <div class="message-time">${time}</div>
+            <div class="message-actions">
+                <button class="btn-message-action" onclick="speakPodcastMessage('${content.replace(/'/g, '\\\\').replace(/"/g, '&quot;')}', '${voice}')" title="Listen to ${speaker}">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button class="btn-message-action" onclick="interruptPodcast()" title="Interrupt podcast">
+                    <i class="fas fa-hand-paper"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Auto-play the message
+    speakPodcastMessage(content, voice);
+}
+
+async function speakPodcastMessage(text, voice) {
+    // Add to audio queue to prevent overlaps
+    audioQueue.push({ text, voice });
+    await processAudioQueue();
+}
+
+async function processAudioQueue() {
+    if (isPlayingAudio || audioQueue.length === 0) {
+        return;
+    }
+
+    isPlayingAudio = true;
+    const { text, voice } = audioQueue.shift();
+
+    try {
+        // Stop any currently playing audio
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+
+        // Remove markdown formatting AND speaker labels for speech
+        let cleanText = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+
+        // Remove speaker labels like "Emma:", "Daan:", "both:" at the beginning
+        cleanText = cleanText.replace(/^(Emma|Daan|both):\s*/i, '');
+
+        console.log(`🔊 Playing podcast audio with voice: ${voice}`);
+        console.log(`🎙️ Original text: "${text.substring(0, 50)}..."`);
+        console.log(`🎙️ Cleaned text: "${cleanText.substring(0, 50)}..."`);
+        console.log(`🎙️ Sending request with cleaned text and voice: ${voice}`);
+
+        // Generate speech using backend with specific voice
+        const response = await fetch('/api/generate_speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: cleanText,
+                language: 'dutch',
+                voice: voice  // Pass specific voice
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.audio_data) {
+                // Convert hex string to audio blob
+                const hexPairs = data.audio_data.match(/.{1,2}/g);
+                if (hexPairs) {
+                    const audioBytes = new Uint8Array(hexPairs.map(byte => parseInt(byte, 16)));
+                    const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Create and play audio element
+                    currentAudio = new Audio(audioUrl);
+                    currentAudio.volume = 0.8;
+
+                    // Wait for audio to finish before processing next in queue
+                    await new Promise((resolve, reject) => {
+                        currentAudio.onended = () => {
+                            console.log(`✅ Finished playing ${voice} audio`);
+                            currentAudio = null;
+                            resolve();
+                        };
+
+                        currentAudio.onerror = (error) => {
+                            console.error('Audio playback error:', error);
+                            currentAudio = null;
+                            reject(error);
+                        };
+
+                        currentAudio.play().catch(reject);
+                    });
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('Podcast speech error:', error);
+    } finally {
+        isPlayingAudio = false;
+        // Process next item in queue
+        if (audioQueue.length > 0) {
+            setTimeout(() => processAudioQueue(), 200); // Small delay between audio clips
+        }
+    }
+}
+
+async function startContinuousPodcast() {
+    if (!isPodcastActive || currentExpert !== 'podcast') {
+        return;
+    }
+
+    console.log('🎙️ Starting continuous podcast flow...');
+
+    // Clear any existing timeout
+    if (podcastTimeout) {
+        clearTimeout(podcastTimeout);
+    }
+
+    // Set up continuous conversation with faster timing
+    podcastTimeout = setTimeout(async () => {
+        await getContinuousPodcastResponse();
+    }, 2000); // 2 seconds between responses for faster flow
+}
+
+async function getContinuousPodcastResponse() {
+    if (!isPodcastActive || currentExpert !== 'podcast') {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/podcast/continue', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.type === 'podcast_message') {
+                handlePodcastResponse(data);
+
+                // Wait for current audio to finish, then schedule next response
+                const waitForAudio = () => {
+                    if (isPlayingAudio || audioQueue.length > 0) {
+                        // Check again in 500ms
+                        setTimeout(waitForAudio, 500);
+                    } else {
+                        // Audio finished, schedule next response faster
+                        podcastTimeout = setTimeout(async () => {
+                            await getContinuousPodcastResponse();
+                        }, 1000); // 1 second pause after audio finishes
+                    }
+                };
+                waitForAudio();
+            } else if (data.type === 'podcast_inactive') {
+                console.log('🎙️ Podcast ended naturally');
+                isPodcastActive = false;
+            }
+        }
+    } catch (error) {
+        console.error('Error getting continuous podcast response:', error);
+        // Retry after longer delay
+        podcastTimeout = setTimeout(async () => {
+            await getContinuousPodcastResponse();
+        }, 10000);
+    }
+}
+
+function interruptPodcast() {
+    console.log('🛑 Podcast interrupted by user');
+
+    // Clear continuous flow
+    if (podcastTimeout) {
+        clearTimeout(podcastTimeout);
+        podcastTimeout = null;
+    }
+
+    // Focus on chat input
+    chatInput.focus();
+    chatInput.placeholder = "Onderbreek de podcast - typ je vraag of opmerking...";
+
+    // Reset placeholder after a few seconds
+    setTimeout(() => {
+        if (chatInput.placeholder.includes('Onderbreek')) {
+            chatInput.placeholder = "Type your message here...";
+        }
+    }, 5000);
+}
+
+function stopPodcast() {
+    console.log('🛑 Stopping podcast');
+
+    isPodcastActive = false;
+
+    if (podcastTimeout) {
+        clearTimeout(podcastTimeout);
+        podcastTimeout = null;
+    }
+
+    // Send stop message to backend
+    chatInput.value = 'stop podcast';
+    sendMessage();
+}
+
+// Add podcast control when expert changes
+const originalExpertChange = expertSelect.addEventListener;
+expertSelect.addEventListener('change', (e) => {
+    // Stop podcast when switching away
+    if (currentExpert === 'podcast' && e.target.value !== 'podcast') {
+        isPodcastActive = false;
+        if (podcastTimeout) {
+            clearTimeout(podcastTimeout);
+            podcastTimeout = null;
+        }
+
+        // Clear audio queue and stop current audio
+        audioQueue = [];
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        isPlayingAudio = false;
+    }
+
+    currentExpert = e.target.value;
+
+    // Reset conversation history when switching experts
+    conversationHistory = [];
+
+    // Update assessment panel context (skip for podcast)
+    if (currentExpert !== 'podcast') {
+        const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
+        assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
+    }
+
+    // Only add welcome message if this is an actual user change (not initial load)
+    if (chatMessages.children.length > 0) {
+        console.log(`🔄 Expert changed to: ${currentExpert} - adding welcome message`);
+        addWelcomeMessage();
+    } else {
+        console.log(`🔄 Expert changed to: ${currentExpert} - skipping welcome (initial load)`);
+    }
 });
 

@@ -360,7 +360,8 @@ body {
     background: var(--vscode-editor-bg);
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Critical for proper flex scrolling */
+    min-height: 0;
+    /* Critical for proper flex scrolling */
 }
 
 .editor-content::-webkit-scrollbar {
@@ -388,7 +389,8 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0; /* Essential for flex scrolling */
+    min-height: 0;
+    /* Essential for flex scrolling */
     animation: fadeIn 0.3s;
 }
 
@@ -1587,7 +1589,8 @@ a:hover {
     height: 100%;
     background: var(--vscode-editor-bg);
     overflow: hidden;
-    min-height: 0; /* Ensure proper flex behavior */
+    min-height: 0;
+    /* Ensure proper flex behavior */
 }
 
 .chat-header {
@@ -1673,15 +1676,18 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 0; /* Ensure flex item can shrink and create scrollable area */
+    min-height: 0;
+    /* Ensure flex item can shrink and create scrollable area */
 }
 
 .chat-messages::-webkit-scrollbar {
-    width: 6px; /* Slightly thinner like VS Code */
+    width: 6px;
+    /* Slightly thinner like VS Code */
 }
 
 .chat-messages::-webkit-scrollbar-track {
-    background: transparent; /* Hidden track like VS Code */
+    background: transparent;
+    /* Hidden track like VS Code */
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
@@ -2444,4 +2450,51 @@ audio::-webkit-media-controls-time-remaining-display {
 #dna_full_report [style*="max-width:"] {
     width: auto !important;
     max-width: 100% !important;
+}
+
+/* Podcast-specific styling */
+.message.podcast-message {
+    animation: podcastSlideIn 0.4s ease-out;
+}
+
+@keyframes podcastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+.message.podcast-message .message-content {
+    border-left: 3px solid var(--vscode-accent);
+    background: linear-gradient(135deg, var(--vscode-input-bg) 0%, var(--vscode-sidebar-bg) 100%);
+}
+
+.message.podcast-message[data-speaker="host1"] .message-content {
+    border-left-color: #e74c3c;
+}
+
+.message.podcast-message[data-speaker="host2"] .message-content {
+    border-left-color: #3498db;
+}
+
+.message.podcast-message .message-text {
+    font-weight: 500;
+}
+
+.message.podcast-message .message-text strong {
+    color: var(--vscode-accent);
+    font-weight: 600;
+}
+
+.btn-message-action {
+    margin-right: 4px;
+}
+
+.btn-message-action:hover {
+    transform: scale(1.1);
 }

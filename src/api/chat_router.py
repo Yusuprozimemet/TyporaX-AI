@@ -13,6 +13,7 @@ from datetime import datetime
 
 from src.experts.healthcare_expert import generate_patient_response as healthcare_response
 from src.experts.it_backend_interviewer import generate_interviewer_response as interview_response
+from src.experts.dutch_podcast_expert import generate_podcast_response, get_continuous_podcast_response
 from src.utils.prompt_manager import get_prompt
 from src.utils.utils import get_logger
 
@@ -178,6 +179,24 @@ async def chat_endpoint(chat_data: ChatMessage):
             "Content-Type": "application/json"
         }
 
+        # Handle podcast expert specially
+        if expert == "podcast":
+            # Generate podcast response
+            podcast_response = await generate_podcast_response(message, [])
+
+            # Log the conversation
+            log_chat_interaction(user_id, expert, message,
+                                 podcast_response.get("message", ""))
+
+            return JSONResponse({
+                "response": podcast_response.get("message", ""),
+                "speaker": podcast_response.get("speaker", "Host"),
+                "speaker_key": podcast_response.get("speaker_key", "host1"),
+                "voice": podcast_response.get("voice", "nl-NL-ColetteNeural"),
+                "type": podcast_response.get("type", "podcast_message"),
+                "audio_needed": podcast_response.get("audio_needed", True)
+            })
+
         # Use chat completions format
         payload = {
             "model": DEFAULT_MODEL,
@@ -230,12 +249,45 @@ async def chat_endpoint(chat_data: ChatMessage):
         return JSONResponse({"response": fallback_response})
 
 
+@router.post("/podcast/continue")
+async def continue_podcast_endpoint():
+    """Get next natural podcast response without user input"""
+    try:
+        podcast_response = await get_continuous_podcast_response()
+
+        if not podcast_response:
+            return JSONResponse({
+                "response": "Podcast is niet actief",
+                "type": "podcast_inactive"
+            })
+
+        return JSONResponse({
+            "response": podcast_response.get("message", ""),
+            "speaker": podcast_response.get("speaker", "Host"),
+            "speaker_key": podcast_response.get("speaker_key", "host1"),
+            "voice": podcast_response.get("voice", "nl-NL-ColetteNeural"),
+            "type": podcast_response.get("type", "podcast_message"),
+            "audio_needed": podcast_response.get("audio_needed", True)
+        })
+
+    except Exception as e:
+        logger.error(f"Continue podcast error: {e}")
+        return JSONResponse({
+            "response": "Er ging iets mis met de podcast",
+            "type": "podcast_error"
+        })
+
+
 @router.post("/generate_speech")
 async def generate_speech_endpoint(request: dict):
     """Generate speech from text using edge-tts"""
     try:
         text = request.get("text", "")
         language = request.get("language", "dutch")
+        voice = request.get("voice", None)  # Optional specific voice
+
+        logger.info(
+            f"🎙️ Speech request - Text: '{text[:50]}...', Language: {language}, Voice: {voice}")
 
         if not text:
             raise HTTPException(status_code=400, detail="Text is required")
@@ -245,7 +297,14 @@ async def generate_speech_endpoint(request: dict):
 
         # Generate speech
         audio_engine = AudioEngine()
-        audio_bytes = await audio_engine.generate_speech_bytes(text, language)
+        if voice:
+            logger.info(f"🔊 Using specific voice: {voice}")
+            # Use specific voice if provided
+            audio_bytes = await audio_engine.generate_speech_bytes_with_voice(text, voice)
+        else:
+            logger.info(f"🔊 Using default voice for language: {language}")
+            # Use default voice for language
+            audio_bytes = await audio_engine.generate_speech_bytes(text, language)
 
         if audio_bytes:
             response_obj = {
