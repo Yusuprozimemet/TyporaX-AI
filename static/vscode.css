@@ -574,11 +574,13 @@ body {
     position: fixed !important;
     top: 60px;
     right: 10px;
-    bottom: auto !important; /* Allow manual height adjustments */
+    bottom: auto !important;
+    /* Allow manual height adjustments */
     width: 380px;
     min-width: 320px;
     max-width: 500px;
-    height: 55vh; /* Default: 55% of viewport height */
+    height: 55vh;
+    /* Default: 55% of viewport height */
     min-height: 220px;
     max-height: calc(100vh - 120px);
     background: var(--vscode-sidebar-bg);
@@ -587,9 +589,11 @@ body {
     box-shadow: 0 12px 48px rgba(0, 122, 204, 0.3), 0 8px 24px rgba(0, 0, 0, 0.6);
     display: none;
     flex-direction: column;
-    overflow: auto; /* Allow scroll when content exceeds height */
+    overflow: auto;
+    /* Allow scroll when content exceeds height */
     z-index: 10000 !important;
-    resize: horizontal; /* Allow horizontal resize for width */
+    resize: horizontal;
+    /* Allow horizontal resize for width */
     backdrop-filter: blur(15px);
     transform: translateZ(0);
     pointer-events: auto;
@@ -615,14 +619,17 @@ body {
     height: 10px;
     cursor: ns-resize;
     z-index: 10001;
-    background: linear-gradient(to top, rgba(0,0,0,0.06), transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.06), transparent);
     transition: background 0.12s;
 }
+
 .assessment-resizer:hover {
-    background: linear-gradient(to top, rgba(0,0,0,0.12), transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.12), transparent);
 }
+
 .assessment-panel.minimized .assessment-resizer {
-    display: none; /* Hide resizer when minimized */
+    display: none;
+    /* Hide resizer when minimized */
 }
 
 .assessment-panel.minimized .assessment-content {
