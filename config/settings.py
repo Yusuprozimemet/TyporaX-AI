@@ -15,7 +15,7 @@ class Config:
     HF_TOKEN: Optional[str] = os.getenv("HF_TOKEN")
 
     # Application Settings
-    APP_NAME: str = "GENELINGUA"
+    APP_NAME: str = "TyporaX-AI"
     VERSION: str = "2.0.0"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 

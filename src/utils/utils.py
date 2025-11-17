@@ -11,7 +11,7 @@ logging.basicConfig(
     format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.FileHandler("data/genelingua.log"),
+        logging.FileHandler("data/typorax.log"),
         logging.StreamHandler()  # Also print to console
     ]
 )

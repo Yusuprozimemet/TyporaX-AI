@@ -1,5 +1,5 @@
 """
-Prompt management utility for GeneLingua
+Prompt management utility for TyporaX-AI
 Loads and manages prompts from JSON configuration files
 """
 import json

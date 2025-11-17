@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Prompt Management CLI Tool for GeneLingua
+Prompt Management CLI Tool for TyporaX-AI
 Usage: python prompt_cli.py [command] [options]
 """
 

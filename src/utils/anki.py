@@ -10,7 +10,7 @@ def export_anki(lesson, user_id):
     words = lesson.get("words", [])
     sentences = lesson.get("sentences", [])
 
-    path = f"data/users/{user_id}/genelingua_anki.csv"
+    path = f"data/users/{user_id}/typorax_anki.csv"
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["Front", "Back", "Example"])

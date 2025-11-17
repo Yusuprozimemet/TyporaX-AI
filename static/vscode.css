@@ -2102,7 +2102,10 @@ audio::-webkit-media-controls-time-remaining-display {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Droid Sans", sans-serif !important;
 }
 
-#dna_full_report h1, #dna_full_report h2, #dna_full_report h3, #dna_full_report h4 {
+#dna_full_report h1,
+#dna_full_report h2,
+#dna_full_report h3,
+#dna_full_report h4 {
     color: var(--vscode-accent) !important;
     margin-top: 20px !important;
     margin-bottom: 10px !important;
@@ -2115,7 +2118,8 @@ audio::-webkit-media-controls-time-remaining-display {
     width: 100% !important;
 }
 
-#dna_full_report th, #dna_full_report td {
+#dna_full_report th,
+#dna_full_report td {
     background: transparent !important;
     border: 1px solid var(--vscode-border) !important;
     padding: 8px !important;
@@ -2330,9 +2334,9 @@ audio::-webkit-media-controls-time-remaining-display {
     font-family: inherit !important;
 }
 
-#dna_full_report h1, 
-#dna_full_report h2, 
-#dna_full_report h3, 
+#dna_full_report h1,
+#dna_full_report h2,
+#dna_full_report h3,
 #dna_full_report h4 {
     color: var(--vscode-accent) !important;
     margin: 16px 0 8px 0;

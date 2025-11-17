@@ -1,51 +1,49 @@
-# 🧬 GENELINGUA v7 — DNA + AI Language Coach
+# 🎓 TyporaX-AI — AI Language Coach
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://python.org)
-[![Gradio](https://img.shields.io/badge/Gradio-4.50+-orange.svg)](https://gradio.app)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**GeneLingua v7** is a revolutionary personalized language learning platform that combines **genetic analysis** with **AI-powered coaching** to create customized Japanese learning experiences. By analyzing your 23andMe DNA data alongside your personality type and daily activities, GeneLingua generates personalized study methods, vocabulary lessons, and progress tracking tailored to your unique genetic predisposition for language learning.
+**TyporaX-AI** is a personalized language learning platform that combines **AI-powered coaching** with **personality-based customization** to create tailored language learning experiences. By analyzing your personality type (MBTI) and daily activities, TyporaX-AI generates personalized study methods, vocabulary lessons, and progress tracking optimized for your learning style.
 
 ## 🌟 Key Features
 
-### 🧬 **Genetic Analysis**
-- **Polygenic Scoring Engine**: Analyzes language-learning-relevant genetic variants
-- **Ancestry-Aware Scoring**: Supports EUR, EAS, SAS, AFR, AMR, MENA, and other populations
-- **Evidence-Based**: Uses published GWAS effect sizes and beta coefficients
-- **Comprehensive Reports**: Detailed SNP contributions and genetic visualizations
-
 ### 🤖 **AI-Powered Personalization**
-- **Smart Study Methods**: Customized based on your DNA percentile and MBTI type
+- **Smart Study Methods**: Customized based on your MBTI personality type and ancestry background
 - **Dynamic Lesson Generation**: Vocabulary and sentences based on your daily activities
-- **Progress Tracking**: Realistic B2-level timeline predictions
+- **Progress Tracking**: Realistic learning timeline predictions
 - **Multi-Modal Output**: PDF reports, Anki flashcards, and audio pronunciation guides
 
 ### 📊 **Professional Interface**
-- **Modern Web UI**: Built with Gradio featuring glass-morphism design
+- **Modern Web UI**: Built with VS Code-inspired design
 - **Responsive Design**: Works seamlessly on desktop and mobile
 - **Real-time Processing**: Live progress updates and detailed logging
 - **Export Capabilities**: Multiple output formats for different learning styles
+
+### 👥 **Expert Chat System**
+- **Dutch Healthcare Expert**: Practice medical terminology and scenarios
+- **IT Interview Coach**: Prepare for technical interviews in Dutch
+- **Language Coach**: General language learning assistance
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.13+
-- 23andMe raw DNA data file (`.txt` or `.zip`)
 - ~4GB RAM for AI model processing
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Yusuprozimemet/GeneLingua.git
-   cd GeneLingua
+   git clone https://github.com/Yusuprozimemet/TyporaX-AI.git
+   cd TyporaX-AI
    ```
 
 2. **Create and activate virtual environment**
    ```bash
    # Using conda (recommended)
-   conda create -n geneenv python=3.13
-   conda activate geneenv
+   conda create -n typorax python=3.13
+   conda activate typorax
    
    # Or using venv
    python -m venv geneenv
@@ -72,9 +70,9 @@
 ## 📁 Project Structure
 
 ```
-GeneLingua/
-├── app.py                  # Main Gradio web application
-├── dna_engine.py          # Polygenic scoring engine
+TyporaX-AI/
+├── main.py                # Main FastAPI application
+├── app.py                 # Web application
 ├── structure.py           # Project structure utilities
 ├── requirements.txt       # Python dependencies
 ├── manifest.json         # Web app manifest
@@ -100,35 +98,34 @@ GeneLingua/
 │           ├── progress.json     # Learning progress
 │           ├── mbti.json        # Personality type
 │           ├── logs.txt         # Daily activity logs
-│           ├── dna_report.png   # Genetic analysis chart
 │           └── outputs/         # Generated materials
 │
 └── static/            # Web assets
-    ├── style.css     # Custom styling
-    ├── manifest.json # PWA manifest
-    └── favicon.ico   # Application icon
+    ├── app.js        # Frontend JavaScript
+    ├── vscode.css    # VS Code-inspired styling
+    └── images/       # Icons and images
 ```
 
-## 🧬 How It Works
+## 🎓 How It Works
 
-### 1. **Genetic Analysis Pipeline**
+### 1. **Personalization System**
 ```
-23andMe Raw Data → SNP Extraction → Polygenic Scoring → Ancestry Adjustment → Percentile Ranking
+User Profile → MBTI Analysis → Learning Style Calibration → Personalized Method
 ```
 
-The DNA engine analyzes key genetic variants associated with:
-- **Cognitive abilities** (e.g., working memory, processing speed)
-- **Language processing** (e.g., phonological awareness, syntax)
-- **Learning efficiency** (e.g., neuroplasticity, memory consolidation)
+The system customizes learning approaches based on:
+- **Personality Type** (MBTI): Learning style preferences
+- **Ancestry Background**: Cultural and linguistic considerations
+- **Daily Activities**: Context-based vocabulary generation
 
-### 2. **AI Personalization System**
-- **Input Processing**: Daily activities, personality type (MBTI), genetic percentile
-- **Method Calibration**: Immersion-heavy vs. structured approaches based on genetics
+### 2. **AI Learning System**
+- **Input Processing**: Daily activities, personality type (MBTI), ancestry background
+- **Method Calibration**: Immersion-heavy vs. structured approaches based on personality
 - **Content Generation**: Contextual vocabulary from your daily experiences
-- **Progress Modeling**: Realistic timelines using genetic and behavioral data
+- **Progress Modeling**: Realistic timelines based on study patterns
 
 ### 3. **Multi-Modal Output Generation**
-- **📄 PDF Reports**: Professional learning plans with genetic insights
+- **📄 PDF Reports**: Professional learning plans with insights
 - **🎴 Anki Decks**: Spaced repetition flashcards with examples
 - **🔊 Audio Files**: Native pronunciation guides using Edge TTS
 - **📊 Progress Charts**: Visual tracking of vocabulary growth and CEFR levels
@@ -137,50 +134,40 @@ The DNA engine analyzes key genetic variants associated with:
 
 ### Step 1: Personal Information
 - **Name/ID**: Unique identifier for your learning profile
-- **Ancestry**: Choose your primary genetic background for accurate scoring
+- **Ancestry**: Choose your background for cultural customization
 - **MBTI Type**: Personality type for learning style customization
 
-### Step 2: Genetic Data Upload
-- **DNA File**: Upload your 23andMe raw data (`.txt` or `.zip` format)
-- **Processing**: Automatic SNP extraction and polygenic scoring
-- **Visualization**: Interactive genetic analysis charts
+### Step 2: Language Preference
+- **Target Language**: Choose from Japanese, Dutch, or Chinese
+- **Language Settings**: Configure your learning preferences
 
 ### Step 3: Learning Context
 - **Daily Activities**: Describe your day for relevant vocabulary generation
-- **Optional Inputs**: Photos and voice logs for enhanced personalization
+- **Chat with Experts**: Practice with AI language coaches
 
 ### Step 4: AI Processing
 - **Genetic Calibration**: Study method optimization based on your DNA percentile
-- **Progress Prediction**: B2-level timeline using realistic growth models
+- **Progress Prediction**: Learning timeline using realistic growth models
 - **Lesson Generation**: Contextual vocabulary and practice sentences
 
 ### Step 5: Download Resources
-- **Complete PDF Plan**: Comprehensive learning strategy with genetic insights
+- **Complete PDF Plan**: Comprehensive learning strategy with personalized insights
 - **Anki Flashcard Deck**: Ready-to-use spaced repetition cards
-- **Audio Pronunciation Guide**: Native Japanese pronunciation examples
+- **Audio Pronunciation Guide**: Native pronunciation examples
 
-## 🔬 Scientific Foundation
+## 🔬 Learning Methodology
 
-### Genetic Variants Analyzed
-- **COMT (rs4680)**: Dopamine regulation affecting working memory
-- **FOXP2 variants**: Language development and speech processing
-- **CACNA1C (rs1006737)**: Neuroplasticity and learning efficiency
-- **BDNF (rs6265)**: Brain-derived neurotrophic factor for memory
+### Personality-Based Customization
+- **MBTI Integration**: Adapts teaching style to personality preferences
+- **Learning Style Optimization**: Visual, auditory, or kinesthetic emphasis
+- **Cultural Background**: Ancestry-aware vocabulary and cultural context
 
-### Population-Specific Adjustments
-- **European (EUR)**: Standard GWAS effect sizes
-- **East Asian (EAS)**: Adjusted for population-specific allele frequencies
-- **South Asian (SAS)**: Regional genetic architecture considerations
-- **African (AFR)**: Population stratification adjustments
-- **American (AMR)**: Admixture-aware scoring
-- **MENA**: Middle Eastern/North African populations
-
-### Learning Method Calibration
-| DNA Percentile | Study Focus | Time Allocation | Approach |
-|---------------|-------------|------------------|----------|
-| 70%+ | Immersion-Heavy | 90min input + 20min SRS | Natural acquisition |
-| 30-70% | Balanced | 70min input + 20min SRS | Mixed methodology |
-| <30% | Structured + Phonics | 60min explicit + 30min drill | Systematic learning |
+### Study Method Calibration
+| Personality Type | Study Focus | Time Allocation | Approach |
+|-----------------|-------------|------------------|----------|
+| Intuitive (N) | Immersion-Heavy | 90min input + 20min SRS | Natural acquisition |
+| Balanced | Mixed | 70min input + 20min SRS | Varied methodology |
+| Sensing (S) | Structured | 60min explicit + 30min drill | Systematic learning |
 
 ## ⚙️ Configuration
 
@@ -191,15 +178,15 @@ TRANSFORMERS_CACHE=/path/to/cache
 CUDA_VISIBLE_DEVICES=0
 
 # Optional: Custom data directory
-GENELINGUA_DATA_DIR=/custom/data/path
+TYPORAX_DATA_DIR=/custom/data/path
 ```
 
 ### Advanced Settings
-Edit `app.py` to customize:
+Edit configuration files to customize:
 - **Model Selection**: Change the language model for lesson generation
-- **Genetic Weights**: Adjust SNP effect sizes for populations
-- **UI Themes**: Modify Gradio theme and styling
+- **UI Themes**: Modify VS Code theme and styling
 - **Export Formats**: Add new output formats
+- **Expert Prompts**: Customize AI coach personalities
 
 ## 🛠️ Development
 
@@ -212,10 +199,10 @@ Edit `app.py` to customize:
 ### Testing
 ```bash
 # Run basic functionality tests
-python -c "from dna_engine import DNAPolygenicEngine; engine = DNAPolygenicEngine(); print('DNA engine OK')"
+python -c "from src.services.lesson_bot import run_lesson_bot; print(run_lesson_bot('test log', 'dutch'))"
 
-# Test with sample data
-python -c "from agents.lesson_bot import run_lesson_bot; print(run_lesson_bot('test log'))"
+# Test the application
+python main.py
 ```
 
 ### Performance Optimization
@@ -234,28 +221,28 @@ We welcome contributions! Please see our contributing guidelines:
 5. **Open** a Pull Request
 
 ### Areas for Contribution
-- **Genetic Variants**: Add new language-learning-relevant SNPs
-- **Language Support**: Extend beyond Japanese to other languages
+- **Language Support**: Extend to more languages beyond Dutch and Japanese
 - **UI/UX**: Improve the web interface and user experience
+- **Expert Coaches**: Add new expert personality types
 - **Performance**: Optimize processing speed and memory usage
 - **Documentation**: Enhance guides and API documentation
 
 ## 📊 Performance Metrics
 
-- **DNA Processing**: ~5-10 seconds for 23andMe files
 - **AI Lesson Generation**: ~30-60 seconds (CPU), ~5-10 seconds (GPU)
 - **PDF Generation**: ~2-5 seconds for complete reports
 - **Memory Usage**: ~3-4GB peak during AI processing
-- **Accuracy**: 85%+ correlation with standardized language aptitude tests
+- **Response Time**: Sub-second for chat interactions
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**1. DNA File Upload Errors**
+**1. Port Already in Use**
 ```bash
-# Ensure file is in correct format
-file genome.txt  # Should show: ASCII text
+# Change port in main.py or kill existing process
+lsof -ti:8000 | xargs kill -9  # Unix
+# Or modify uvicorn.run(app, port=8001)
 ```
 
 **2. Model Loading Issues**
@@ -278,9 +265,9 @@ export CUDA_VISIBLE_DEVICES=""
 ```
 
 ### Getting Help
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/Yusuprozimemet/GeneLingua/issues)
-- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/Yusuprozimemet/GeneLingua/discussions)
-- **Documentation**: Check our [Wiki](https://github.com/Yusuprozimemet/GeneLingua/wiki) for detailed guides
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/Yusuprozimemet/TyporaX-AI/issues)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/Yusuprozimemet/TyporaX-AI/discussions)
+- **Documentation**: Check our [Wiki](https://github.com/Yusuprozimemet/TyporaX-AI/wiki) for detailed guides
 
 ## 📜 License
 
@@ -313,4 +300,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the future of personalized education**
 
-*GeneLingua v7 - Where genetics meets AI to unlock your language learning potential*
+*TyporaX-AI v8 - Where personality meets AI to unlock your language learning potential*

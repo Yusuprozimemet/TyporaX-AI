@@ -12,6 +12,21 @@ document.querySelectorAll('.tab').forEach(tab => {
             content.classList.remove('active');
         });
         document.getElementById(`${targetTab}-content`).classList.add('active');
+
+        // Auto-show assessment panel when switching to Talk Experts tab
+        // This will be enhanced after AssessmentPanel class is initialized
+        if (targetTab === 'experts') {
+            // Try to use the AssessmentPanel class if available
+            if (window.assessmentPanelInstance) {
+                window.assessmentPanelInstance.show();
+            } else {
+                // Fallback for early execution
+                const panel = document.getElementById('assessmentPanel');
+                if (panel && !panel.classList.contains('active')) {
+                    panel.classList.add('active');
+                }
+            }
+        }
     });
 });
 
@@ -64,10 +79,6 @@ function switchToPanel(panel) {
         'profile': {
             title: '<i class="fas fa-user-circle"></i> USER PROFILE',
             contentId: 'profile-content'
-        },
-        'dna': {
-            title: '<i class="fas fa-dna"></i> DNA ANALYSIS',
-            contentId: 'dna-content'
         },
         'lessons': {
             title: '<i class="fas fa-book"></i> LESSON GENERATOR',
@@ -183,13 +194,7 @@ userIdInput.addEventListener('blur', async () => {
             mbtiSelect.value = data.profile.mbti || 'INTJ';
             targetLanguageSelect.value = data.profile.target_language || 'japanese';
 
-            let statusMsg = `✅ Profile loaded for ${userId}`;
-            if (data.dna_exists) {
-                statusMsg += '\n📁 DNA file found - no need to re-upload';
-            } else {
-                statusMsg += '\n⚠️ Please upload your DNA file';
-            }
-            profileStatus.textContent = statusMsg;
+            profileStatus.textContent = `✅ Profile loaded for ${userId}`;
             currentUserSpan.textContent = userId;
             updateLanguageDisplay();
         } else {
@@ -223,94 +228,11 @@ function setStatus(message, isError = false) {
     statusMessage.innerHTML = `${icon} ${message}`;
 }
 
-// DNA Analysis Button
+// DNA Analysis Button - REMOVED
+// DNA analysis feature has been removed from the application
+
+// Lesson Generation Button
 document.addEventListener('DOMContentLoaded', () => {
-    const analyzeDnaBtn = document.getElementById('analyzeDnaBtn');
-    if (analyzeDnaBtn) {
-        analyzeDnaBtn.addEventListener('click', async () => {
-            const userId = userIdInput.value.trim() || 'unknown';
-            const ancestry = ancestrySelect.value;
-            const mbti = mbtiSelect.value;
-            const dnaFile = document.getElementById('dna_file').files[0];
-
-            if (!dnaFile) {
-                alert('Please upload a DNA file first.');
-                return;
-            }
-
-            // Disable button and show loading
-            analyzeDnaBtn.disabled = true;
-            analyzeDnaBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-            setStatus('Analyzing DNA and generating personalized method...');
-
-            try {
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('user_id', userId);
-                formData.append('ancestry', ancestry);
-                formData.append('mbti', mbti);
-                formData.append('dna_file', dnaFile);
-
-                // Send request to new DNA analysis endpoint
-                const response = await fetch('/api/analyze-dna', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                // Update DNA analysis status in sidebar
-                if (result.dna_report) {
-                    const percentile = result.dna_report.pgs_results?.percentile || 0;
-                    const category = result.dna_report.interpretation?.category || 'Unknown';
-                    document.getElementById('dna_analysis_status').innerHTML = 
-                        `<div style="color: var(--vscode-charts-green);"><i class="fas fa-check-circle"></i> DNA Analysis Complete</div>
-                         <div style="margin-top: 8px; font-size: 12px;">Score: ${percentile.toFixed(1)}th percentile (${category})</div>`;
-                }
-
-                // Update learning method status in lesson generator
-                if (result.method) {
-                    const methodText = typeof result.method === 'string' ? result.method : JSON.stringify(result.method, null, 2);
-                    document.getElementById('learning_method_status').innerHTML = 
-                        `<div style="color: var(--vscode-charts-green);"><i class="fas fa-check-circle"></i> Learning Method Ready</div>
-                         <div style="margin-top: 8px; font-size: 12px;">Personalized method generated based on your genetics</div>`;
-                }
-
-                // Update overview tab with basic info
-                if (result.dna_report) {
-                    const textReport = result.dna_report.text_report || 'DNA analysis completed';
-                    document.getElementById('dna_output').innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${textReport}</pre>`;
-                }
-
-                if (result.method) {
-                    const methodText = typeof result.method === 'string' ? result.method : JSON.stringify(result.method, null, 2);
-                    document.getElementById('method_output').innerHTML = formatMarkdown(methodText);
-                }
-
-                // Update comprehensive DNA analysis tab
-                if (result.dna_report) {
-                    updateDnaAnalysisTab(result.dna_report);
-                }
-
-                setStatus('DNA analysis completed successfully!');
-
-            } catch (error) {
-                console.error('Error:', error);
-                setStatus('Error analyzing DNA', true);
-                alert('An error occurred during DNA analysis. Please try again.');
-            } finally {
-                // Re-enable button
-                analyzeDnaBtn.disabled = false;
-                analyzeDnaBtn.innerHTML = '<i class="fas fa-microscope"></i> Analyze DNA & Generate Method';
-            }
-        });
-    }
-
-    // Lesson Generation Button
     const generateLessonBtn = document.getElementById('generateLessonBtn');
     if (generateLessonBtn) {
         generateLessonBtn.addEventListener('click', async () => {
@@ -393,169 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Function to update DNA Analysis tab with comprehensive report
-function updateDnaAnalysisTab(dnaReport) {
-    try {
-        // Score Summary
-        if (dnaReport.pgs_results && dnaReport.interpretation) {
-            const pgs = dnaReport.pgs_results;
-            const interp = dnaReport.interpretation;
-            
-            document.getElementById('dna_score_summary').innerHTML = `
-                <div class="dna-score-grid">
-                    <div class="score-item">
-                        <div class="score-label">Percentile Rank</div>
-                        <div class="score-value">${pgs.percentile.toFixed(1)}%</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-label">Z-Score</div>
-                        <div class="score-value">${pgs.z_score > 0 ? '+' : ''}${pgs.z_score.toFixed(3)}</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-label">Category</div>
-                        <div class="score-value">${interp.category}</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-label">SNPs Analyzed</div>
-                        <div class="score-value">${pgs.n_valid_snps}/${pgs.n_total_snps}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Interpretation
-        if (dnaReport.interpretation) {
-            const interp = dnaReport.interpretation;
-            document.getElementById('dna_interpretation').innerHTML = `
-                <div class="interpretation-section">
-                    <h4>${interp.category}</h4>
-                    <p>${interp.main_text}</p>
-                    <p><strong>Genetic Contribution:</strong> ${interp.variance_text}</p>
-                </div>
-            `;
-        }
-
-        // Top Contributing SNPs
-        if (dnaReport.top_contributors) {
-            let snpsHtml = '<div class="snps-list">';
-            dnaReport.top_contributors.forEach((snp, index) => {
-                const contribution = snp.contribution > 0 ? `+${snp.contribution.toFixed(5)}` : snp.contribution.toFixed(5);
-                snpsHtml += `
-                    <div class="snp-item">
-                        <div class="snp-header">
-                            <strong>${index + 1}. ${snp.rsid}</strong> (${snp.gene})
-                            <span class="contribution ${snp.contribution > 0 ? 'positive' : 'negative'}">${contribution}</span>
-                        </div>
-                        <div class="snp-details">
-                            <div><strong>Genotype:</strong> ${snp.genotype} - ${snp.dosage_text}</div>
-                            <div><strong>Phenotype:</strong> ${snp.phenotype}</div>
-                            <div><strong>Evidence:</strong> ${snp.evidence} (${snp.population})</div>
-                            ${snp.notes ? `<div><strong>Notes:</strong> ${snp.notes}</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            snpsHtml += '</div>';
-            document.getElementById('dna_top_snps').innerHTML = snpsHtml;
-        }
-
-        // Category Breakdown
-        if (dnaReport.category_scores) {
-            let categoryHtml = '<div class="category-grid">';
-            Object.entries(dnaReport.category_scores).forEach(([category, data]) => {
-                const totalScore = data.total_score || 0;
-                const count = data.count || 0;
-                categoryHtml += `
-                    <div class="category-item">
-                        <div class="category-name">${category}</div>
-                        <div class="category-score">${totalScore > 0 ? '+' : ''}${totalScore.toFixed(4)}</div>
-                        <div class="category-count">${count} SNPs</div>
-                    </div>
-                `;
-            });
-            categoryHtml += '</div>';
-            document.getElementById('dna_categories').innerHTML = categoryHtml;
-        }
-        
-
-        // Learning Scenarios
-        if (dnaReport.scenarios) {
-            let scenariosHtml = '<div class="scenarios-table"><table><thead><tr><th>Scenario</th><th>Genetics</th><th>Method</th><th>Daily Time</th><th>Time to B2</th></tr></thead><tbody>';
-            dnaReport.scenarios.forEach(scenario => {
-                scenariosHtml += `
-                    <tr>
-                        <td><strong>${scenario.scenario}</strong></td>
-                        <td>${scenario.genetics}</td>
-                        <td>${scenario.method}</td>
-                        <td>${scenario.daily_minutes} min</td>
-                        <td>${scenario.months_to_b2.toFixed(1)} months</td>
-                    </tr>
-                `;
-            });
-            scenariosHtml += '</tbody></table></div>';
-            document.getElementById('dna_scenarios').innerHTML = scenariosHtml;
-        }
-
-        // Update plots tab with visualizations
-        updatePlotsTab(dnaReport);
-
-        // Full HTML Report - Show summary instead of full HTML to maintain clean styling
-        document.getElementById('dna_full_report').innerHTML = 
-            `<div class="output-text">
-                <p><strong>Analysis Complete:</strong> Your comprehensive DNA analysis has been processed successfully.</p>
-                <p><strong>Report Generated:</strong> ${dnaReport.metadata?.generated?.slice(0, 19) || 'Just now'}</p>
-                <p><strong>Version:</strong> GeneLingua v${dnaReport.metadata?.version || '3.5'}</p>
-                <p><strong>Ancestry:</strong> ${dnaReport.metadata?.ancestry_label || 'Not specified'}</p>
-                <p class="hint">All detailed results are displayed in the sections above and in the Plots & Charts tab.</p>
-            </div>`;
-
-    } catch (error) {
-        console.error('Error updating DNA analysis tab:', error);
-        document.getElementById('dna_score_summary').innerHTML = 
-            '<div class="output-text">Error displaying DNA analysis results. Please check the console for details.</div>';
-    }
-}
-
-// Function to update Plots tab with visualizations and charts
-function updatePlotsTab(dnaReport) {
-    try {
-        const dnaVizContainer = document.getElementById('dna_visualizations');
-        const dnaVizPlaceholder = document.getElementById('plots_dna_viz_placeholder');
-        
-        if (!dnaVizContainer) {
-            console.error('DNA visualizations container not found');
-            return;
-        }
-        
-        // DNA Visualizations
-        if (dnaReport && dnaReport.visualizations && Object.keys(dnaReport.visualizations).length > 0) {
-            let vizHtml = '<div class="visualizations-grid">';
-            Object.entries(dnaReport.visualizations).forEach(([name, base64Data]) => {
-                vizHtml += `
-                    <div class="viz-item">
-                        <h4>${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
-                        <img src="data:image/png;base64,${base64Data}" style="max-width: 100%; border-radius: 8px;" alt="${name}">
-                    </div>
-                `;
-            });
-            vizHtml += '</div>';
-            dnaVizContainer.innerHTML = vizHtml;
-            if (dnaVizPlaceholder) {
-                dnaVizPlaceholder.style.display = 'none';
-            }
-        } else {
-            dnaVizContainer.innerHTML = 
-                '<div class="output-text">No visualizations available. This may be due to missing dependencies (numpy, matplotlib) or other issues.</div>';
-        }
-    } catch (error) {
-        console.error('Error updating plots tab:', error);
-        const dnaVizContainer = document.getElementById('dna_visualizations');
-        if (dnaVizContainer) {
-            dnaVizContainer.innerHTML = 
-                '<div class="output-text">Error loading visualizations. Please check the console for details.</div>';
-        }
-    }
-}
+// DNA-related functions have been removed
 
 // Check for existing resources on page load
 async function checkExistingResources() {
@@ -1680,11 +1440,20 @@ class AssessmentPanel {
             });
 
             const assessment = await response.json();
+            console.log('📊 Raw assessment response:', assessment);
 
             if (assessment.error) {
                 console.warn('Assessment error:', assessment.error);
+                // Use fallback assessment if provided
+                const dataToDisplay = assessment.fallback_assessment || assessment;
+                console.log('📊 Using fallback assessment:', dataToDisplay);
+                
+                // Store the latest assessment data
+                this.latestAssessment = dataToDisplay;
+                
+                // Display immediately if panel is visible
                 if (this.isActive) {
-                    this.showFallbackAssessment(assessment.fallback_assessment);
+                    this.displayAssessment(dataToDisplay);
                 }
                 return;
             }
@@ -1701,8 +1470,21 @@ class AssessmentPanel {
 
         } catch (error) {
             console.error('Failed to get assessment:', error);
+            // Create a minimal fallback assessment
+            const fallbackData = {
+                overall_score: { overall_score: 5.0, performance_level: 'developing' },
+                language_analysis: { grammar_score: 5, fluency_score: 5, vocabulary_level: 'intermediate' },
+                hints: {
+                    language_tips: ['Keep practicing Dutch!'],
+                    conversation_tips: ['Stay engaged in the conversation'],
+                    expert_tips: ['Ask questions to learn more']
+                }
+            };
+            
+            this.latestAssessment = fallbackData;
+            
             if (this.isActive) {
-                this.showFallbackAssessment();
+                this.displayAssessment(fallbackData);
             }
         }
     }
@@ -1739,12 +1521,22 @@ class AssessmentPanel {
     }
 
     displayAssessment(assessment) {
-        console.log('📊 Displaying assessment for message:', assessment);
+        console.log('📊 Displaying assessment:', assessment);
+        console.log('📊 Assessment structure check:', {
+            hasOverallScore: !!assessment.overall_score,
+            hasLanguageAnalysis: !!assessment.language_analysis,
+            hasHints: !!assessment.hints,
+            overallScore: assessment.overall_score,
+            languageAnalysis: assessment.language_analysis,
+            hints: assessment.hints
+        });
 
         // Update overall score
         const overall = assessment.overall_score || {};
         const score = overall.overall_score || 0;
         const level = overall.performance_level || 'developing';
+
+        console.log('📊 Updating overall score:', { score, level });
 
         if (this.elements.overallScore) {
             const scoreNumber = this.elements.overallScore.querySelector('.score-number');
@@ -1957,6 +1749,8 @@ class AssessmentPanel {
 
 // Initialize assessment panel
 const assessmentPanel = new AssessmentPanel();
+// Make it globally accessible for tab switching
+window.assessmentPanelInstance = assessmentPanel;
 
 // Setup assessment panel for Talk Experts tab
 function setupAssessmentForExperts() {
@@ -1984,6 +1778,10 @@ document.addEventListener('DOMContentLoaded', () => {
         addWelcomeMessage();
         setupAssessmentForExperts();
         checkExistingResources();
+
+        // Auto-show assessment panel on page load since Talk Experts is default tab
+        // Use the AssessmentPanel class method instead of directly manipulating DOM
+        assessmentPanel.show();
 
         // Debug: Test panel visibility
         const panel = document.getElementById('assessmentPanel');

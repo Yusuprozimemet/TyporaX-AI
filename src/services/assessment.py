@@ -1,5 +1,5 @@
 """
-Real-time Assessment System for GeneLingua Expert Conversations
+Real-time Assessment System for TyporaX-AI Expert Conversations
 Provides dynamic feedback, hints, and assessments during expert chats
 """
 
@@ -236,6 +236,7 @@ class RealTimeAssessment:
             headers = {"Authorization": f"Bearer {self.hf_token}"}
 
             # Try models with fallback
+            content = None
             for model in [self.default_model, self.fallback_model]:
                 try:
                     payload["model"] = model
@@ -245,12 +246,16 @@ class RealTimeAssessment:
 
                         result = response.json()
                         content = result["choices"][0]["message"]["content"]
-                        break
+                        break  # Success, exit loop
                 except Exception as e:
                     logger.warning(f"Hint generation with {model} failed: {e}")
                     if model == self.fallback_model:
-                        raise
+                        # Both models failed, will use fallback hints
+                        return self._get_fallback_hints(expert)
+                    continue
 
+            # Parse successful response
+            if content:
                 return {
                     "language_tips": self._extract_tips(content, "taal"),
                     "conversation_tips": self._extract_tips(content, "conversatie"),
@@ -261,6 +266,8 @@ class RealTimeAssessment:
                         "Gebruik formele begroetingen"
                     ]
                 }
+            else:
+                return self._get_fallback_hints(expert)
 
         except Exception as e:
             logger.error(f"Hint generation failed: {e}")

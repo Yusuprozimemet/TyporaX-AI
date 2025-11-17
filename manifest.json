@@ -1,7 +1,7 @@
 {
-    "name": "GeneLingua",
-    "short_name": "GeneLingua",
-    "description": "DNA + AI Language Coach",
+    "name": "TyporaX-AI",
+    "short_name": "TyporaX",
+    "description": "AI Language Coach",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

@@ -12,9 +12,9 @@ from src.api.main_router import router as main_router
 
 # Initialize FastAPI
 app = FastAPI(
-    title="GENELINGUA - DNA + AI Language Coach",
-    description="AI-powered language learning with genetic-based personalization",
-    version="2.0.0"
+    title="TyporaX-AI - AI Language Coach",
+    description="AI-powered language learning with personality-based personalization",
+    version="8.0.0"
 )
 
 # Mount static files

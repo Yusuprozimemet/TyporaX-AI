@@ -1,9 +1,9 @@
-# GeneLingua Project Structure
+# TyporaX-AI Project Structure
 
 ## 📁 New Organized Structure
 
 ```
-GeneLingua/
+TyporaX-AI/
 ├── main.py                     # 🚀 Main FastAPI application entry point
 ├── config/                     # ⚙️ Configuration files
 │   ├── __init__.py

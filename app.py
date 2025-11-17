@@ -1,5 +1,5 @@
 """
-GeneLingua Application - Redirects to new modular structure
+TyporaX-AI Application - Redirects to new modular structure
 For the new organized structure, use: python main.py
 """
 

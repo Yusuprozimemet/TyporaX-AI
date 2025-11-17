@@ -1,1 +1,1 @@
-"""GeneLingua source code package"""
+"""TyporaX-AI source code package"""

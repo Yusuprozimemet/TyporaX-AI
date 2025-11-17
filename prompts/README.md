@@ -1,4 +1,4 @@
-# GeneLingua Prompt Management System
+# TyporaX-AI Prompt Management System
 
 This system externalizes all AI prompts from Python code into JSON configuration files, making it easy to update and customize expert behavior without touching the codebase.
 
@@ -213,4 +213,4 @@ Errors are logged and fallback behavior is provided.
 
 ---
 
-This system makes GeneLingua's AI behavior highly configurable and maintainable! 🎯
+This system makes TyporaX-AI's AI behavior highly configurable and maintainable! 🎯

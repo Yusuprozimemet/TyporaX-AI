@@ -10,7 +10,7 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 def generate_pdf(dna_report, method, progress, lesson, user_id):
     from src.utils.utils import ensure_dir
     user_dir = ensure_dir(f"data/users/{user_id}")
-    path = f"{user_dir}/GENELINGUA_COMPREHENSIVE_REPORT.pdf"
+    path = f"{user_dir}/TYPORAX_COMPREHENSIVE_REPORT.pdf"
 
     # Create high-quality PDF document
     doc = SimpleDocTemplate(
@@ -94,7 +94,7 @@ def generate_pdf(dna_report, method, progress, lesson, user_id):
     # =========================
     # TITLE PAGE
     # =========================
-    story.append(Paragraph("GENELINGUA v7", title_style))
+    story.append(Paragraph("TyporaX-AI v8", title_style))
     story.append(Paragraph("Comprehensive DNA + AI Language Learning Report", ParagraphStyle(
         'Subtitle', parent=normal_style, fontSize=14, alignment=TA_CENTER, textColor=HexColor('#666'))))
     story.append(Spacer(1, 30))
