@@ -9,39 +9,39 @@
     <link rel="icon" type="image/x-icon" href="/static/images/icon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/static/images/icon.ico">
     <link rel="stylesheet" href="/static/vscode.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@latest/dist/codicon.css" />
 </head>
 
 <body>
     <!-- Activity Bar (Left-most sidebar) -->
     <div class="activity-bar">
         <div class="activity-item active" data-panel="profile" title="User Profile">
-            <i class="fas fa-user-circle"></i>
+            <i class="codicon codicon-account"></i>
         </div>
         <div class="activity-item" data-panel="lessons" title="Lesson Generator">
-            <i class="fas fa-book"></i>
+            <i class="codicon codicon-notebook"></i>
         </div>
         <div class="activity-item" data-panel="progress" title="Progress">
-            <i class="fas fa-chart-line"></i>
+            <i class="codicon codicon-graph"></i>
         </div>
         <div class="activity-item" data-panel="resources" title="Resources">
-            <i class="fas fa-download"></i>
+            <i class="codicon codicon-cloud-download"></i>
         </div>
         <div class="activity-spacer"></div>
         <div class="activity-item" data-panel="settings" title="Settings">
-            <i class="fas fa-cog"></i>
+            <i class="codicon codicon-settings-gear"></i>
         </div>
     </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h3><i class="fas fa-user-circle"></i> USER PROFILE</h3>
+            <h3><i class="codicon codicon-account"></i> USER PROFILE</h3>
         </div>
         <div class="sidebar-content" id="profile-content">
             <div class="form-group">
                 <label for="user_id">
-                    <i class="fas fa-id-card"></i> Your Name or ID
+                    <i class="codicon codicon-tag"></i> Your Name or ID
                 </label>
                 <input type="text" id="user_id" placeholder="e.g., John, alex, yusup...">
                 <div class="hint">Used to save and load your settings</div>
@@ -56,12 +56,12 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-user"></i> PERSONAL PROFILE
+                <i class="codicon codicon-person"></i> PERSONAL PROFILE
             </div>
 
             <div class="form-group">
                 <label for="ancestry">
-                    <i class="fas fa-globe"></i> Ancestry Background
+                    <i class="codicon codicon-globe"></i> Ancestry Background
                 </label>
                 <select id="ancestry">
                     <option value="EUR">🌍 European</option>
@@ -76,7 +76,7 @@
 
             <div class="form-group">
                 <label for="mbti">
-                    <i class="fas fa-brain"></i> Personality Type (MBTI)
+                    <i class="codicon codicon-symbol-misc"></i> Personality Type (MBTI)
                 </label>
                 <select id="mbti">
                     <option value="INTJ" selected>INTJ</option>
@@ -101,12 +101,12 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-flag"></i> LANGUAGE PREFERENCE
+                <i class="codicon codicon-symbol-namespace"></i> LANGUAGE PREFERENCE
             </div>
 
             <div class="form-group">
                 <label for="target_language">
-                    <i class="fas fa-flag"></i> Target Language
+                    <i class="codicon codicon-symbol-namespace"></i> Target Language
                 </label>
                 <select id="target_language">
                     <option value="japanese" selected>🇯🇵 Japanese (日本語)</option>
@@ -119,12 +119,12 @@
         <!-- Lesson Generator Content (hidden by default) -->
         <div class="sidebar-content" id="lessons-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-book-open"></i> LESSON GENERATOR
+                <i class="codicon codicon-book"></i> LESSON GENERATOR
             </div>
 
             <div class="form-group">
                 <label for="log_text">
-                    <i class="fas fa-calendar-day"></i> Today's Activities
+                    <i class="codicon codicon-calendar"></i> Today's Activities
                 </label>
                 <textarea id="log_text" rows="3"
                     placeholder="e.g., Had coffee with friends, watched anime...">Dutch languge, Learning, Method, Anki</textarea>
@@ -134,7 +134,7 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-info-circle"></i> LEARNING STATUS
+                <i class="codicon codicon-info"></i> LEARNING STATUS
             </div>
 
             <div class="form-group">
@@ -144,14 +144,14 @@
             </div>
 
             <button class="btn-primary" id="generateLessonBtn">
-                <i class="fas fa-graduation-cap"></i> Generate Today's Lesson
+                <i class="codicon codicon-mortar-board"></i> Generate Today's Lesson
             </button>
         </div>
 
         <!-- Learning Content (hidden by default) -->
         <div class="sidebar-content" id="progress-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-graduation-cap"></i> LEARNING PROGRESS
+                <i class="codicon codicon-mortar-board"></i> LEARNING PROGRESS
             </div>
 
             <div class="progress-item">
@@ -167,7 +167,7 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-chart-bar"></i> SESSION STATS
+                <i class="codicon codicon-graph-line"></i> SESSION STATS
             </div>
 
             <div class="stats-grid">
@@ -185,11 +185,11 @@
         <!-- Progress Content (hidden by default) -->
         <div class="sidebar-content" id="progress-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-trophy"></i> ACHIEVEMENTS
+                <i class="codicon codicon-trophy"></i> ACHIEVEMENTS
             </div>
 
             <div class="achievement-item">
-                <i class="fas fa-star"></i>
+                <i class="codicon codicon-star-full"></i>
                 <div class="achievement-text">
                     <div class="achievement-title">First Steps</div>
                     <div class="achievement-desc">Started learning journey</div>
@@ -199,12 +199,12 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-calendar-week"></i> WEEKLY PROGRESS
+                <i class="codicon codicon-calendar"></i> WEEKLY PROGRESS
             </div>
 
             <div class="progress-chart">
                 <div class="chart-placeholder">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="codicon codicon-graph"></i>
                     <p>Start chatting to see progress</p>
                 </div>
             </div>
@@ -213,7 +213,7 @@
         <!-- Resources Content (hidden by default) -->
         <div class="sidebar-content" id="resources-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-file-pdf"></i> PDF REPORT
+                <i class="codicon codicon-file-pdf"></i> PDF REPORT
             </div>
             <div id="pdf_output">
                 <p class="output-text">Generate your learning plan to download the complete PDF report</p>
@@ -222,7 +222,7 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-clone"></i> ANKI DECK
+                <i class="codicon codicon-layers"></i> ANKI DECK
             </div>
             <div id="anki_output">
                 <p class="output-text">Your Anki flashcard deck will be available here for spaced repetition practice
@@ -232,7 +232,7 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-volume-up"></i> AUDIO GUIDE
+                <i class="codicon codicon-unmute"></i> AUDIO GUIDE
             </div>
             <div id="audio_output">
                 <p class="output-text">Pronunciation audio will be available here</p>
@@ -241,18 +241,18 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-link"></i> USEFUL LINKS
+                <i class="codicon codicon-link"></i> USEFUL LINKS
             </div>
 
             <div class="link-item">
                 <a href="#" class="resource-link">
-                    <i class="fas fa-external-link-alt"></i> Dutch Grammar Guide
+                    <i class="codicon codicon-link-external"></i> Dutch Grammar Guide
                 </a>
             </div>
 
             <div class="link-item">
                 <a href="#" class="resource-link">
-                    <i class="fas fa-external-link-alt"></i> Pronunciation Practice
+                    <i class="codicon codicon-link-external"></i> Pronunciation Practice
                 </a>
             </div>
         </div>
@@ -260,12 +260,12 @@
         <!-- Settings Content (hidden by default) -->
         <div class="sidebar-content" id="settings-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-palette"></i> APPEARANCE
+                <i class="codicon codicon-symbol-color"></i> APPEARANCE
             </div>
 
             <div class="form-group">
                 <label for="theme_select">
-                    <i class="fas fa-moon"></i> Theme
+                    <i class="codicon codicon-color-mode"></i> Theme
                 </label>
                 <select id="theme_select">
                     <option value="dark">Dark Theme</option>
@@ -277,12 +277,12 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-volume-up"></i> AUDIO SETTINGS
+                <i class="codicon codicon-unmute"></i> AUDIO SETTINGS
             </div>
 
             <div class="form-group">
                 <label for="voice_speed">
-                    <i class="fas fa-tachometer-alt"></i> Speech Speed
+                    <i class="codicon codicon-dashboard"></i> Speech Speed
                 </label>
                 <input type="range" id="voice_speed" min="0.5" max="2" step="0.1" value="1">
                 <div class="hint">Current: Normal (1.0x)</div>
@@ -298,11 +298,11 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-database"></i> DATA
+                <i class="codicon codicon-database"></i> DATA
             </div>
 
             <button class="btn-secondary" id="clearDataBtn">
-                <i class="fas fa-trash"></i> Clear All Data
+                <i class="codicon codicon-trash"></i> Clear All Data
             </button>
         </div>
     </div>
@@ -312,22 +312,22 @@
         <!-- Tabs -->
         <div class="editor-tabs">
             <div class="tab active" data-tab="experts">
-                <i class="fas fa-user-tie"></i> Talk Experts
+                <i class="codicon codicon-organization"></i> Talk Experts
             </div>
             <div class="tab" data-tab="markdown">
-                <i class="fas fa-file-alt"></i> Markdown Editor
+                <i class="codicon codicon-file-code"></i> Markdown Editor
             </div>
             <div class="tab" data-tab="lesson">
-                <i class="fas fa-book-open"></i> Today's Lesson
+                <i class="codicon codicon-book"></i> Today's Lesson
             </div>
             <div class="tab" data-tab="anki">
-                <i class="fas fa-clone"></i> Anki Flashcards
+                <i class="codicon codicon-layers"></i> Anki Flashcards
             </div>
             <div class="tab" data-tab="plots">
-                <i class="fas fa-chart-area"></i> Plots & Charts
+                <i class="codicon codicon-graph"></i> Plots & Charts
             </div>
             <div class="tab" data-tab="overview">
-                <i class="fas fa-home"></i> Overview
+                <i class="codicon codicon-home"></i> Overview
             </div>
         </div>
 
@@ -338,7 +338,7 @@
                 <div class="chat-container">
                     <!-- Chat Header with Expert Selection -->
                     <div class="chat-header">
-                        <h3><i class="fas fa-comments"></i> Praat met Nederlandse Experts</h3>
+                        <h3><i class="codicon codicon-comment-discussion"></i> Praat met Nederlandse Experts</h3>
                         <div class="chat-controls">
                             <div class="expert-selector">
                                 <label for="expertSelect">Expert:</label>
@@ -350,7 +350,7 @@
                                 </select>
                             </div>
                             <button class="btn-toggle-assessment" id="toggleAssessment" title="Toggle Live Assessment">
-                                <i class="fas fa-chart-line"></i>
+                                <i class="codicon codicon-graph-line"></i>
                             </button>
                         </div>
                     </div>
@@ -358,7 +358,7 @@
                     <!-- Chat Messages Area -->
                     <div class="chat-messages" id="chatMessages">
                         <div class="chat-welcome">
-                            <i class="fas fa-robot"></i>
+                            <i class="codicon codicon-hubot"></i>
                             <h3>Welkom bij Nederlandse Expert Chat!</h3>
                             <p>Kies een expert hierboven en begin een gesprek in het Nederlands. Je kunt typen of spraak
                                 gebruiken.</p>
@@ -372,11 +372,11 @@
                                 rows="1"></textarea>
                             <div class="chat-controls">
                                 <button class="btn-voice" id="voiceButton" title="Voice input">
-                                    <i class="fas fa-microphone"></i>
+                                    <i class="codicon codicon-mic"></i>
                                     <div class="voice-status inactive"></div>
                                 </button>
                                 <button class="btn-send" id="sendButton" title="Send message" disabled>
-                                    <i class="fas fa-paper-plane"></i>
+                                    <i class="codicon codicon-send"></i>
                                 </button>
                             </div>
                         </div>
@@ -389,9 +389,9 @@
                 <div class="markdown-editor-container">
                     <div class="markdown-editor-panel">
                         <div class="panel-header">
-                            <h3><i class="fas fa-edit"></i> Editor</h3>
+                            <h3><i class="codicon codicon-edit"></i> Editor</h3>
                             <button class="btn-small" id="clearMarkdown" title="Clear editor">
-                                <i class="fas fa-trash"></i>
+                                <i class="codicon codicon-trash"></i>
                             </button>
                         </div>
                         <textarea id="markdownInput"
@@ -399,7 +399,7 @@
                     </div>
                     <div class="markdown-preview-panel">
                         <div class="panel-header">
-                            <h3><i class="fas fa-eye"></i> Preview</h3>
+                            <h3><i class="codicon codicon-eye"></i> Preview</h3>
                         </div>
                         <div id="markdownPreview" class="markdown-preview">
                             <p class="output-text">Start typing in the editor to see the preview here...</p>
@@ -410,15 +410,15 @@
 
             <!-- Lesson Tab -->
             <div class="tab-content" id="lesson-content">
-                <h2><i class="fas fa-book-open"></i> Today's Lesson</h2>
+                <h2><i class="codicon codicon-book"></i> Today's Lesson</h2>
                 <div class="card">
-                    <h3><i class="fas fa-spell-check"></i> Vocabulary List</h3>
+                    <h3><i class="codicon codicon-symbol-keyword"></i> Vocabulary List</h3>
                     <div id="words_detail" class="output-text">
                         No vocabulary loaded yet
                     </div>
                 </div>
                 <div class="card">
-                    <h3><i class="fas fa-paragraph"></i> Practice Sentences</h3>
+                    <h3><i class="codicon codicon-whole-word"></i> Practice Sentences</h3>
                     <div id="sentences_detail" class="output-text">
                         No sentences loaded yet
                     </div>
@@ -427,14 +427,14 @@
 
             <!-- Anki Flashcards Tab -->
             <div class="tab-content" id="anki-content">
-                <h2><i class="fas fa-clone"></i> Anki Flashcards</h2>
+                <h2><i class="codicon codicon-layers"></i> Anki Flashcards</h2>
                 <div class="flashcard-controls">
                     <button class="btn-flashcard" id="prevCard" disabled>
-                        <i class="fas fa-chevron-left"></i> Previous
+                        <i class="codicon codicon-chevron-left"></i> Previous
                     </button>
                     <span class="card-counter" id="cardCounter">0 / 0</span>
                     <button class="btn-flashcard" id="nextCard" disabled>
-                        Next <i class="fas fa-chevron-right"></i>
+                        Next <i class="codicon codicon-chevron-right"></i>
                     </button>
                 </div>
                 <div class="flashcard-container" id="flashcardContainer">
@@ -454,11 +454,11 @@
 
             <!-- Plots & Charts Tab -->
             <div class="tab-content" id="plots-content">
-                <h2><i class="fas fa-chart-area"></i> Visualizations & Charts</h2>
+                <h2><i class="codicon codicon-graph"></i> Visualizations & Charts</h2>
 
                 <!-- Progress Plots -->
                 <div class="card">
-                    <h3><i class="fas fa-chart-line"></i> Learning Progress</h3>
+                    <h3><i class="codicon codicon-graph-line"></i> Learning Progress</h3>
                     <div id="progress_plot_container">
                         <img id="progress_plot" style="display: none; max-width: 100%; border-radius: 8px;">
                         <div class="output-text" id="progress_plot_placeholder">
@@ -469,7 +469,7 @@
 
                 <!-- Additional Charts -->
                 <div class="card">
-                    <h3><i class="fas fa-chart-pie"></i> Learning Analytics</h3>
+                    <h3><i class="codicon codicon-pie-chart"></i> Learning Analytics</h3>
                     <div id="learning_analytics" class="output-text">
                         Learning analytics and performance charts will appear here
                     </div>
@@ -479,13 +479,13 @@
             <!-- Overview Tab -->
             <div class="tab-content" id="overview-content">
                 <div class="welcome-header">
-                    <h1><i class="fas fa-graduation-cap"></i> TyporaX-AI</h1>
+                    <h1><i class="codicon codicon-mortar-board"></i> TyporaX-AI</h1>
                     <p>Your Personalized AI Language Learning Coach</p>
                 </div>
 
                 <div class="content-grid">
                     <div class="card">
-                        <h3><i class="fas fa-bullseye"></i> Recommended Study Method</h3>
+                        <h3><i class="codicon codicon-target"></i> Recommended Study Method</h3>
                         <div id="method_output" class="output-text">
                             Your personalized study method will appear here
                         </div>
@@ -498,30 +498,30 @@
     <!-- Status Bar -->
     <div class="status-bar">
         <div class="status-left">
-            <span id="status_message"><i class="fas fa-circle"></i> Ready</span>
+            <span id="status_message"><i class="codicon codicon-circle-filled"></i> Ready</span>
             <button class="status-btn" id="testAssessment" title="Toggle Live Assessment Panel">
-                <i class="fas fa-chart-line"></i> Live Assessment
+                <i class="codicon codicon-graph-line"></i> Live Assessment
             </button>
         </div>
         <div class="status-right">
-            <span><i class="fas fa-user"></i> <span id="current_user">Not logged in</span></span>
-            <span><i class="fas fa-language"></i> <span id="current_language">Japanese</span></span>
+            <span><i class="codicon codicon-account"></i> <span id="current_user">Not logged in</span></span>
+            <span><i class="codicon codicon-symbol-namespace"></i> <span id="current_language">Japanese</span></span>
         </div>
     </div>
 
     <!-- Assessment Panel (Floating Modal) -->
     <div class="assessment-panel" id="assessmentPanel">
         <div class="assessment-header">
-            <h3><i class="fas fa-chart-line"></i> Live Assessment</h3>
+            <h3><i class="codicon codicon-graph-line"></i> Live Assessment</h3>
             <button class="btn-close" id="closeAssessment" title="Close Assessment">
-                <i class="fas fa-times"></i>
+                <i class="codicon codicon-close"></i>
             </button>
         </div>
 
         <div class="assessment-content">
             <!-- Overall Score -->
             <div class="assessment-section">
-                <h4><i class="fas fa-star"></i> Overall Performance</h4>
+                <h4><i class="codicon codicon-star-full"></i> Overall Performance</h4>
                 <div class="score-display" id="overallScore">
                     <div class="score-circle">
                         <span class="score-number">-</span>
@@ -533,7 +533,7 @@
 
             <!-- Language Analysis -->
             <div class="assessment-section">
-                <h4><i class="fas fa-language"></i> Language Quality</h4>
+                <h4><i class="codicon codicon-symbol-namespace"></i> Language Quality</h4>
                 <div class="language-metrics" id="languageMetrics">
                     <div class="metric">
                         <span class="metric-label">Grammar:</span>
@@ -558,7 +558,7 @@
 
             <!-- Grammar Corrections -->
             <div class="assessment-section" id="correctionsSection" style="display: none;">
-                <h4><i class="fas fa-spell-check"></i> Grammar Corrections</h4>
+                <h4><i class="codicon codicon-symbol-keyword"></i> Grammar Corrections</h4>
                 <div class="corrections-container">
                     <div class="errors-found" id="errorsFound">
                         <h5>Errors Found:</h5>
@@ -573,7 +573,7 @@
                         </ul>
                     </div>
                     <div class="improved-version" id="improvedVersion">
-                        <h5><i class="fas fa-magic"></i> Better Version:</h5>
+                        <h5><i class="codicon codicon-wand"></i> Better Version:</h5>
                         <div class="improved-text" id="improvedText">
                             Begin te typen voor een verbeterde versie...
                         </div>
@@ -586,7 +586,7 @@
 
             <!-- Real-time Hints -->
             <div class="assessment-section">
-                <h4><i class="fas fa-lightbulb"></i> Live Hints</h4>
+                <h4><i class="codicon codicon-lightbulb"></i> Live Hints</h4>
                 <div class="hints-container" id="hintsContainer">
                     <div class="hint-category">
                         <h5>Language Tips:</h5>
@@ -611,7 +611,7 @@
 
             <!-- Learning Progress -->
             <div class="assessment-section">
-                <h4><i class="fas fa-trophy"></i> Session Progress</h4>
+                <h4><i class="codicon codicon-trophy"></i> Session Progress</h4>
                 <div class="progress-stats" id="progressStats">
                     <div class="stat">
                         <span class="stat-value" id="messageCount">0</span>
@@ -630,19 +630,19 @@
 
             <!-- Quick Actions -->
             <div class="assessment-section">
-                <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                <h4><i class="codicon codicon-zap"></i> Quick Actions</h4>
                 <div class="quick-actions">
                     <button class="btn-action" id="getHelpBtn">
-                        <i class="fas fa-question-circle"></i> Get Help
+                        <i class="codicon codicon-question"></i> Get Help
                     </button>
                     <button class="btn-action" id="practiceMoreBtn">
-                        <i class="fas fa-redo"></i> Practice More
+                        <i class="codicon codicon-refresh"></i> Practice More
                     </button>
                     <button class="btn-action" id="reviewErrorsBtn">
-                        <i class="fas fa-exclamation-triangle"></i> Review Errors
+                        <i class="codicon codicon-warning"></i> Review Errors
                     </button>
                     <button class="btn-action" id="minimizeBtn">
-                        <i class="fas fa-window-minimize"></i> Minimize
+                        <i class="codicon codicon-chevron-down"></i> Minimize
                     </button>
                 </div>
             </div>
