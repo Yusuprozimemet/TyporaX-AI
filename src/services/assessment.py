@@ -9,7 +9,8 @@ import re
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 import httpx
-from tools.utils import get_logger
+from src.utils.utils import get_logger
+from src.utils.prompt_manager import get_prompt
 
 logger = get_logger(__name__)
 
@@ -67,28 +68,9 @@ class RealTimeAssessment:
     async def _analyze_language_quality(self, message: str) -> Dict:
         """Analyze Dutch language quality of user message"""
         try:
-            # Enhanced prompt for better analysis
-            prompt = f"""Je bent een Nederlandse taalexpert. Analyseer deze Nederlandse tekst precies:
-
-Tekst: "{message}"
-
-Beoordeel op:
-1. Grammatica (0-10): Zijn zinsbouw, werkwoordsvervoegingen, naamvallen correct?
-2. Woordenschat (beginner/intermediate/advanced): Complexiteit en variatie van woorden
-3. Vloeendheid (0-10): Natuurlijkheid en vloeiendheid van de tekst
-4. Specificke fouten en verbeteringen
-
-Antwoord ALLEEN met geldige JSON:
-{{
-    "grammar_score": 0-10,
-    "vocabulary_level": "beginner/intermediate/advanced",
-    "fluency_score": 0-10,
-    "errors": ["specifieke grammaticale fouten of verkeerde woorden"],
-    "corrections": ["correcte versies van de fouten"],
-    "improved_version": "Een verbeterde versie van het hele bericht met correcte grammatica en natuurlijker taalgebruik",
-    "explanation": "Uitleg van de belangrijkste verbeteringen",
-    "strengths": ["sterke punten"]
-}}"""
+            # Get language analysis prompt from configuration
+            prompt = get_prompt('assessment', 'language_analysis', {
+                                'message': message})
 
             # Try default model first
             payload = {
@@ -238,18 +220,11 @@ Antwoord ALLEEN met geldige JSON:
             context = " ".join([msg.get("content", "")
                                for msg in conversation_history[-4:]])
 
-            prompt = f"""Geef korte, praktische tips voor deze Nederlandse conversatie:
-
-Expert: {expert}
-Context: {context}
-Laatste bericht: {current_message}
-
-Geef 3 soorten tips:
-1. Taalverbeteringen (grammar/vocabulary)  
-2. Conversatie tips (flow/engagement)
-3. Expert-specifieke tips ({expert} context)
-
-Houd het kort en praktisch."""
+            prompt = get_prompt('assessment', 'hints_generation', {
+                'expert': expert,
+                'context': context,
+                'current_message': current_message
+            })
 
             payload = {
                 "model": self.default_model,

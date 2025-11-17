@@ -77,6 +77,19 @@ body {
     font-size: 24px;
 }
 
+.activity-item .activity-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    filter: brightness(0.7);
+    transition: filter 0.2s ease;
+}
+
+.activity-item:hover .activity-icon,
+.activity-item.active .activity-icon {
+    filter: brightness(1);
+}
+
 .activity-spacer {
     flex: 1;
 }
@@ -264,7 +277,7 @@ body {
     transition: margin-left 0.2s ease;
 }
 
-.sidebar.collapsed ~ .editor-container {
+.sidebar.collapsed~.editor-container {
     margin-left: 0;
 }
 
@@ -1047,6 +1060,22 @@ body {
 .assessment-panel::-webkit-resizer {
     background: var(--vscode-accent);
     border-radius: 2px;
+}
+
+/* Assessment Panel Scrollbar - Hidden but functional */
+.assessment-content::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.assessment-content::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+/* Firefox scrollbar hiding for assessment panel */
+.assessment-content {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 /* Status Bar */
@@ -1999,4 +2028,370 @@ a:hover {
     .expert-selector select {
         min-width: 120px;
     }
+}
+
+/* Resource Tab Styles */
+.resource-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    border: 1px solid var(--vscode-border);
+    border-radius: 4px;
+    background: var(--vscode-input-bg);
+    margin-bottom: 10px;
+}
+
+.btn-download,
+.btn-play {
+    background: var(--vscode-button-bg);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    text-decoration: none;
+}
+
+.btn-download:hover,
+.btn-play:hover {
+    background: var(--vscode-button-hover);
+}
+
+.btn-download i,
+.btn-play i {
+    font-size: 16px;
+}
+
+.resource-desc {
+    color: var(--vscode-text-secondary);
+    font-size: 12px;
+    margin: 0;
+}
+
+.resource-item .btn-download,
+.resource-item .btn-play {
+    align-self: flex-start;
+}
+
+/* Audio player styling */
+audio {
+    background: var(--vscode-input-bg);
+    border-radius: 4px;
+}
+
+audio::-webkit-media-controls-panel {
+    background-color: var(--vscode-input-bg);
+}
+
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: var(--vscode-text);
+}
+
+/* DNA Analysis Report Styles - Override any inline styles from HTML report */
+#dna_full_report * {
+    color: var(--vscode-text) !important;
+    background: transparent !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Droid Sans", sans-serif !important;
+}
+
+#dna_full_report h1, #dna_full_report h2, #dna_full_report h3, #dna_full_report h4 {
+    color: var(--vscode-accent) !important;
+    margin-top: 20px !important;
+    margin-bottom: 10px !important;
+}
+
+#dna_full_report table {
+    background: var(--vscode-input-bg) !important;
+    border: 1px solid var(--vscode-border) !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+#dna_full_report th, #dna_full_report td {
+    background: transparent !important;
+    border: 1px solid var(--vscode-border) !important;
+    padding: 8px !important;
+    color: var(--vscode-text) !important;
+}
+
+#dna_full_report th {
+    background: var(--vscode-activitybar-bg) !important;
+    font-weight: bold !important;
+}
+
+.dna-score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.score-item {
+    background: var(--vscode-input-bg);
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.score-label {
+    font-size: 11px;
+    color: var(--vscode-text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.score-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--vscode-accent);
+}
+
+.interpretation-section h4 {
+    color: var(--vscode-accent);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.interpretation-section p {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.snps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.snp-item {
+    background: var(--vscode-input-bg);
+    border-radius: 6px;
+    padding: 12px;
+    border-left: 3px solid var(--vscode-border);
+}
+
+.snp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.contribution {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.contribution.positive {
+    background: rgba(46, 160, 67, 0.2);
+    color: #4caf50;
+}
+
+.contribution.negative {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f44336;
+}
+
+.snp-details {
+    font-size: 12px;
+    color: var(--vscode-text-secondary);
+    line-height: 1.3;
+}
+
+.snp-details div {
+    margin-bottom: 4px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.category-item {
+    background: var(--vscode-input-bg);
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.category-name {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.category-score {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--vscode-accent);
+    font-family: 'Courier New', monospace;
+}
+
+.category-count {
+    font-size: 11px;
+    color: var(--vscode-text-secondary);
+    margin-top: 4px;
+}
+
+.scenarios-table {
+    overflow-x: auto;
+    margin: 16px 0;
+}
+
+.scenarios-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--vscode-input-bg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.scenarios-table th,
+.scenarios-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--vscode-border);
+}
+
+.scenarios-table th {
+    background: var(--vscode-activitybar-bg);
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.scenarios-table td {
+    font-size: 12px;
+}
+
+.scenarios-table tr:last-child td {
+    border-bottom: none;
+}
+
+.visualizations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 16px 0;
+}
+
+.viz-item {
+    background: var(--vscode-input-bg);
+    padding: 16px;
+    border-radius: 6px;
+}
+
+.viz-item h4 {
+    margin-bottom: 12px;
+    color: var(--vscode-accent);
+    font-size: 13px;
+}
+
+.viz-item img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--vscode-border);
+}
+
+/* Text report styling */
+.text-report {
+    background: var(--vscode-input-bg);
+    color: var(--vscode-text);
+    padding: 16px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    border: 1px solid var(--vscode-border);
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Ensure any embedded HTML follows VSCode theme */
+#dna_full_report * {
+    color: var(--vscode-text) !important;
+    background: var(--vscode-input-bg) !important;
+    font-family: inherit !important;
+}
+
+#dna_full_report h1, 
+#dna_full_report h2, 
+#dna_full_report h3, 
+#dna_full_report h4 {
+    color: var(--vscode-accent) !important;
+    margin: 16px 0 8px 0;
+}
+
+#dna_full_report table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+}
+
+#dna_full_report th,
+#dna_full_report td {
+    border: 1px solid var(--vscode-border) !important;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+#dna_full_report th {
+    background: var(--vscode-activitybar-bg) !important;
+    font-weight: bold;
+}
+
+#dna_full_report .disclaimer {
+    background: rgba(255, 193, 7, 0.1) !important;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    margin: 16px 0;
+    border-radius: 4px;
+}
+
+/* Ensure all DNA report content follows VSCode theme */
+.card #dna_full_report {
+    background: transparent;
+    color: var(--vscode-text);
+}
+
+.card #dna_full_report * {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Fix any layout issues in the full HTML report */
+#dna_full_report .container,
+#dna_full_report .row,
+#dna_full_report div[style*="width"] {
+    width: auto !important;
+    max-width: 100% !important;
+}
+
+/* Style DNA report tables properly */
+#dna_full_report .table-responsive {
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+/* Fix any fixed widths or layouts */
+#dna_full_report [style*="width:"],
+#dna_full_report [style*="max-width:"] {
+    width: auto !important;
+    max-width: 100% !important;
 }

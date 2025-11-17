@@ -4,7 +4,7 @@ import os
 
 
 def export_anki(lesson, user_id):
-    from tools.utils import ensure_dir
+    from src.utils.utils import ensure_dir
     ensure_dir(f"data/users/{user_id}")
 
     words = lesson.get("words", [])

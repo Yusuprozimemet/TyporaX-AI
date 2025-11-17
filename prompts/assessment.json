@@ -1,0 +1,16 @@
+{
+    "language_analysis": {
+        "prompt_template": "Je bent een Nederlandse taalexpert. Analyseer deze Nederlandse tekst precies:\n\nTekst: \"{message}\"\n\nBeoordeel op:\n1. Grammatica (0-10): Zijn zinsbouw, werkwoordsvervoegingen, naamvallen correct?\n2. Woordenschat (beginner/intermediate/advanced): Complexiteit en variatie van woorden\n3. Vloeendheid (0-10): Natuurlijkheid en vloeiendheid van de tekst\n4. Specificke fouten en verbeteringen\n\nAntwoord ALLEEN met geldige JSON:\n{{\n    \"grammar_score\": 0-10,\n    \"vocabulary_level\": \"beginner/intermediate/advanced\",\n    \"fluency_score\": 0-10,\n    \"errors\": [\"specifieke grammaticale fouten of verkeerde woorden\"],\n    \"corrections\": [\"correcte versies van de fouten\"],\n    \"improved_version\": \"Een verbeterde versie van het hele bericht met correcte grammatica en natuurlijker taalgebruik\",\n    \"explanation\": \"Uitleg van de belangrijkste verbeteringen\",\n    \"strengths\": [\"sterke punten\"]\n}}",
+        "variables": [
+            "message"
+        ]
+    },
+    "hints_generation": {
+        "prompt_template": "Geef korte, praktische tips voor deze Nederlandse conversatie:\n\nExpert: {expert}\nContext: {context}\nLaatste bericht: {current_message}\n\nGeef 3 soorten tips:\n1. Taalverbeteringen (grammar/vocabulary)\n2. Conversatie tips (flow/engagement)\n3. Expert-specifieke tips ({expert} context)\n\nHoud het kort en praktisch.",
+        "variables": [
+            "expert",
+            "context",
+            "current_message"
+        ]
+    }
+}

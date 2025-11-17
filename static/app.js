@@ -24,7 +24,7 @@ let sidebarVisible = true;
 document.querySelectorAll('.activity-item').forEach(item => {
     item.addEventListener('click', () => {
         const panel = item.dataset.panel;
-        
+
         if (currentActivePanel === panel && sidebarVisible) {
             // Clicking the same active panel - hide sidebar
             hideSidebar();
@@ -33,7 +33,7 @@ document.querySelectorAll('.activity-item').forEach(item => {
             showSidebar();
             switchToPanel(panel);
         }
-        
+
         // Update active states
         document.querySelectorAll('.activity-item').forEach(i => i.classList.remove('active'));
         if (sidebarVisible) {
@@ -61,19 +61,23 @@ function switchToPanel(panel) {
     // Update sidebar header and content based on panel
     const sidebarHeader = document.querySelector('.sidebar-header h3');
     const panelConfigs = {
-        'explorer': {
+        'profile': {
             title: '<i class="fas fa-user-circle"></i> USER PROFILE',
             contentId: 'profile-content'
         },
-        'search': {
-            title: '<i class="fas fa-book"></i> LEARNING',
-            contentId: 'learning-content'
+        'dna': {
+            title: '<i class="fas fa-dna"></i> DNA ANALYSIS',
+            contentId: 'dna-content'
         },
-        'git': {
+        'lessons': {
+            title: '<i class="fas fa-book"></i> LESSON GENERATOR',
+            contentId: 'lessons-content'
+        },
+        'progress': {
             title: '<i class="fas fa-chart-line"></i> PROGRESS',
             contentId: 'progress-content'
         },
-        'extensions': {
+        'resources': {
             title: '<i class="fas fa-download"></i> RESOURCES',
             contentId: 'resources-content'
         },
@@ -82,23 +86,23 @@ function switchToPanel(panel) {
             contentId: 'settings-content'
         }
     };
-    
+
     const config = panelConfigs[panel];
     if (config && sidebarHeader) {
         // Update header
         sidebarHeader.innerHTML = config.title;
-        
+
         // Hide all sidebar content sections
         document.querySelectorAll('.sidebar-content').forEach(content => {
             content.style.display = 'none';
         });
-        
+
         // Show the selected content
         const targetContent = document.getElementById(config.contentId);
         if (targetContent) {
             targetContent.style.display = 'block';
         }
-        
+
         console.log(`📱 Switched to ${panel} panel`);
     }
 }
@@ -110,7 +114,7 @@ function initializeSidebar() {
     if (explorerItem) {
         explorerItem.classList.add('active');
     }
-    
+
     // Ensure profile content is visible by default
     switchToPanel('explorer');
     console.log('📱 Sidebar initialized');
@@ -132,14 +136,14 @@ document.addEventListener('keydown', (e) => {
             currentActivePanel = lastActive;
         }
     }
-    
+
     // Quick panel switching with Ctrl/Cmd + number keys
     if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '5') {
         e.preventDefault();
         const panels = ['explorer', 'search', 'git', 'extensions', 'settings'];
         const panelIndex = parseInt(e.key) - 1;
         const panel = panels[panelIndex];
-        
+
         if (panel) {
             showSidebar();
             switchToPanel(panel);
@@ -171,7 +175,7 @@ userIdInput.addEventListener('blur', async () => {
     }
 
     try {
-        const response = await fetch(`/api/load_profile?user_id=${encodeURIComponent(userId)}`);
+        const response = await fetch(`/load_profile?user_id=${encodeURIComponent(userId)}`);
         const data = await response.json();
 
         if (data.profile) {
@@ -219,139 +223,501 @@ function setStatus(message, isError = false) {
     statusMessage.innerHTML = `${icon} ${message}`;
 }
 
-// Generate Learning Plan
-const generateBtn = document.getElementById('generateBtn');
-generateBtn.addEventListener('click', async () => {
-    const userId = userIdInput.value.trim() || 'unknown';
-    const ancestry = ancestrySelect.value;
-    const mbti = mbtiSelect.value;
-    const targetLanguage = targetLanguageSelect.value;
-    const logText = document.getElementById('log_text').value;
-    const dnaFile = document.getElementById('dna_file').files[0];
+// DNA Analysis Button
+document.addEventListener('DOMContentLoaded', () => {
+    const analyzeDnaBtn = document.getElementById('analyzeDnaBtn');
+    if (analyzeDnaBtn) {
+        analyzeDnaBtn.addEventListener('click', async () => {
+            const userId = userIdInput.value.trim() || 'unknown';
+            const ancestry = ancestrySelect.value;
+            const mbti = mbtiSelect.value;
+            const dnaFile = document.getElementById('dna_file').files[0];
 
-    // Disable button and show loading
-    generateBtn.disabled = true;
-    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    setStatus('Processing your request...');
+            if (!dnaFile) {
+                alert('Please upload a DNA file first.');
+                return;
+            }
 
-    try {
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('user_id', userId);
-        formData.append('ancestry', ancestry);
-        formData.append('mbti', mbti);
-        formData.append('target_language', targetLanguage);
-        formData.append('log_text', logText);
+            // Disable button and show loading
+            analyzeDnaBtn.disabled = true;
+            analyzeDnaBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            setStatus('Analyzing DNA and generating personalized method...');
 
-        if (dnaFile) {
-            formData.append('dna_file', dnaFile);
-        }
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('ancestry', ancestry);
+                formData.append('mbti', mbti);
+                formData.append('dna_file', dnaFile);
 
-        // Send request
-        const response = await fetch('/api/process', {
-            method: 'POST',
-            body: formData
+                // Send request to new DNA analysis endpoint
+                const response = await fetch('/api/analyze-dna', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Update DNA analysis status in sidebar
+                if (result.dna_report) {
+                    const percentile = result.dna_report.pgs_results?.percentile || 0;
+                    const category = result.dna_report.interpretation?.category || 'Unknown';
+                    document.getElementById('dna_analysis_status').innerHTML = 
+                        `<div style="color: var(--vscode-charts-green);"><i class="fas fa-check-circle"></i> DNA Analysis Complete</div>
+                         <div style="margin-top: 8px; font-size: 12px;">Score: ${percentile.toFixed(1)}th percentile (${category})</div>`;
+                }
+
+                // Update learning method status in lesson generator
+                if (result.method) {
+                    const methodText = typeof result.method === 'string' ? result.method : JSON.stringify(result.method, null, 2);
+                    document.getElementById('learning_method_status').innerHTML = 
+                        `<div style="color: var(--vscode-charts-green);"><i class="fas fa-check-circle"></i> Learning Method Ready</div>
+                         <div style="margin-top: 8px; font-size: 12px;">Personalized method generated based on your genetics</div>`;
+                }
+
+                // Update overview tab with basic info
+                if (result.dna_report) {
+                    const textReport = result.dna_report.text_report || 'DNA analysis completed';
+                    document.getElementById('dna_output').innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${textReport}</pre>`;
+                }
+
+                if (result.method) {
+                    const methodText = typeof result.method === 'string' ? result.method : JSON.stringify(result.method, null, 2);
+                    document.getElementById('method_output').innerHTML = formatMarkdown(methodText);
+                }
+
+                // Update comprehensive DNA analysis tab
+                if (result.dna_report) {
+                    updateDnaAnalysisTab(result.dna_report);
+                }
+
+                setStatus('DNA analysis completed successfully!');
+
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('Error analyzing DNA', true);
+                alert('An error occurred during DNA analysis. Please try again.');
+            } finally {
+                // Re-enable button
+                analyzeDnaBtn.disabled = false;
+                analyzeDnaBtn.innerHTML = '<i class="fas fa-microscope"></i> Analyze DNA & Generate Method';
+            }
         });
+    }
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    // Lesson Generation Button
+    const generateLessonBtn = document.getElementById('generateLessonBtn');
+    if (generateLessonBtn) {
+        generateLessonBtn.addEventListener('click', async () => {
+            const userId = userIdInput.value.trim() || 'unknown';
+            const targetLanguage = targetLanguageSelect.value;
+            const logText = document.getElementById('log_text').value;
 
-        const result = await response.json();
+            // Disable button and show loading
+            generateLessonBtn.disabled = true;
+            generateLessonBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            setStatus('Generating today\'s lesson...');
 
-        // Update all outputs
-        if (result.dna_report) {
-            document.getElementById('dna_output').textContent = result.dna_report;
-            document.getElementById('dna_detail').textContent = result.dna_report;
-        }
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('target_language', targetLanguage);
+                formData.append('log_text', logText);
 
-        if (result.method) {
-            document.getElementById('method_output').innerHTML = formatMarkdown(result.method);
-        }
+                // Send request to new lesson generation endpoint
+                const response = await fetch('/api/generate-lesson', {
+                    method: 'POST',
+                    body: formData
+                });
 
-        if (result.words) {
-            document.getElementById('words_output').innerHTML = formatList(result.words);
-            document.getElementById('words_detail').innerHTML = formatList(result.words);
-        }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-        if (result.sentences) {
-            document.getElementById('sentences_output').innerHTML = formatList(result.sentences);
-            document.getElementById('sentences_detail').innerHTML = formatList(result.sentences);
-        }
+                const result = await response.json();
 
-        // DNA Plot
-        if (result.dna_plot_path) {
-            const dnaPlot = document.getElementById('dna_plot');
-            dnaPlot.src = result.dna_plot_path;
-            dnaPlot.style.display = 'block';
-            document.getElementById('dna_plot_placeholder').style.display = 'none';
-        }
+                // Update lesson content
+                if (result.words) {
+                    const wordsOutputEl = document.getElementById('words_output');
+                    if (wordsOutputEl) wordsOutputEl.innerHTML = formatList(result.words);
+                    const wordsDetailEl = document.getElementById('words_detail');
+                    if (wordsDetailEl) wordsDetailEl.innerHTML = formatList(result.words);
+                }
 
-        // Progress Plot
-        if (result.progress_plot_path) {
-            const progressPlot = document.getElementById('progress_plot');
-            progressPlot.src = result.progress_plot_path;
-            progressPlot.style.display = 'block';
-            document.getElementById('progress_plot_placeholder').style.display = 'none';
-        }
+                if (result.sentences) {
+                    const sentencesOutputEl = document.getElementById('sentences_output');
+                    if (sentencesOutputEl) sentencesOutputEl.innerHTML = formatList(result.sentences);
+                    const sentencesDetailEl = document.getElementById('sentences_detail');
+                    if (sentencesDetailEl) sentencesDetailEl.innerHTML = formatList(result.sentences);
+                }
 
-        // PDF Download
-        if (result.pdf_path) {
-            document.getElementById('pdf_output').innerHTML =
-                `<a href="${result.pdf_path}" class="download-link" download>
-                    <i class="fas fa-download"></i> Download PDF Report
-                </a>
-                <p class="output-text" style="margin-top: 12px;">Complete personalized learning report</p>`;
-        }
+                // Update Resources Tab
+                updateResourcesTab(result.user_id || userId);
 
-        // Anki Download
-        if (result.anki_path) {
-            document.getElementById('anki_output').innerHTML =
-                `<a href="${result.anki_path}" class="download-link" download>
-                    <i class="fas fa-download"></i> Download Anki Deck
-                </a>
-                <p class="output-text" style="margin-top: 12px;">Import this into Anki for spaced repetition</p>`;
+                // Handle audio
+                if (result.audio_path) {
+                    document.getElementById('audio_output').innerHTML =
+                        `<audio controls style="width: 100%;">
+                            <source src="/download/audio/${userId}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <p class="output-text" style="margin-top: 12px;">Listen to native pronunciation</p>`;
+                }
 
-            // Load flashcards for the Anki tab
-            loadFlashcards(result.anki_path);
-        } else {
-            loadFlashcards(null);
-        }
+                // Handle Anki flashcards
+                if (result.anki_path) {
+                    loadFlashcards(`/download/anki/${userId}`);
+                }
 
-        // Audio - Always show player or error message
-        if (result.audio_path) {
-            document.getElementById('audio_output').innerHTML =
-                `<audio controls style="width: 100%;">
-                    <source src="${result.audio_path}" type="audio/mpeg">
-                    Your browser does not support the audio element.
-                </audio>
-                <p class="output-text" style="margin-top: 12px;">Listen to native pronunciation</p>`;
-        } else {
-            document.getElementById('audio_output').innerHTML =
-                `<div class="output-text">
-                    <p style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Audio generation failed or is still processing.</p>
-                    <p style="margin-top: 8px; color: var(--vscode-text-secondary);">You can still see your sentences in the lesson tab.</p>
-                </div>`;
-        }
+                setStatus('Lesson generated successfully!');
 
-        setStatus('Learning plan generated successfully!');
+                // Switch to overview tab to show results
+                document.querySelector('.tab[data-tab="overview"]').click();
 
-        // Switch to overview tab to show results
-        document.querySelector('.tab[data-tab="overview"]').click();
-
-    } catch (error) {
-        console.error('Error:', error);
-        setStatus('Error generating learning plan', true);
-        alert('An error occurred while generating your learning plan. Please try again.');
-    } finally {
-        // Re-enable button
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<i class="fas fa-rocket"></i> Generate Learning Plan';
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('Error generating lesson', true);
+                alert('An error occurred while generating the lesson. Please try again.');
+            } finally {
+                // Re-enable button
+                generateLessonBtn.disabled = false;
+                generateLessonBtn.innerHTML = '<i class="fas fa-graduation-cap"></i> Generate Today\'s Lesson';
+            }
+        });
     }
 });
 
-// Helper functions
+// Function to update DNA Analysis tab with comprehensive report
+function updateDnaAnalysisTab(dnaReport) {
+    try {
+        // Score Summary
+        if (dnaReport.pgs_results && dnaReport.interpretation) {
+            const pgs = dnaReport.pgs_results;
+            const interp = dnaReport.interpretation;
+            
+            document.getElementById('dna_score_summary').innerHTML = `
+                <div class="dna-score-grid">
+                    <div class="score-item">
+                        <div class="score-label">Percentile Rank</div>
+                        <div class="score-value">${pgs.percentile.toFixed(1)}%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Z-Score</div>
+                        <div class="score-value">${pgs.z_score > 0 ? '+' : ''}${pgs.z_score.toFixed(3)}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Category</div>
+                        <div class="score-value">${interp.category}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">SNPs Analyzed</div>
+                        <div class="score-value">${pgs.n_valid_snps}/${pgs.n_total_snps}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Interpretation
+        if (dnaReport.interpretation) {
+            const interp = dnaReport.interpretation;
+            document.getElementById('dna_interpretation').innerHTML = `
+                <div class="interpretation-section">
+                    <h4>${interp.category}</h4>
+                    <p>${interp.main_text}</p>
+                    <p><strong>Genetic Contribution:</strong> ${interp.variance_text}</p>
+                </div>
+            `;
+        }
+
+        // Top Contributing SNPs
+        if (dnaReport.top_contributors) {
+            let snpsHtml = '<div class="snps-list">';
+            dnaReport.top_contributors.forEach((snp, index) => {
+                const contribution = snp.contribution > 0 ? `+${snp.contribution.toFixed(5)}` : snp.contribution.toFixed(5);
+                snpsHtml += `
+                    <div class="snp-item">
+                        <div class="snp-header">
+                            <strong>${index + 1}. ${snp.rsid}</strong> (${snp.gene})
+                            <span class="contribution ${snp.contribution > 0 ? 'positive' : 'negative'}">${contribution}</span>
+                        </div>
+                        <div class="snp-details">
+                            <div><strong>Genotype:</strong> ${snp.genotype} - ${snp.dosage_text}</div>
+                            <div><strong>Phenotype:</strong> ${snp.phenotype}</div>
+                            <div><strong>Evidence:</strong> ${snp.evidence} (${snp.population})</div>
+                            ${snp.notes ? `<div><strong>Notes:</strong> ${snp.notes}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            snpsHtml += '</div>';
+            document.getElementById('dna_top_snps').innerHTML = snpsHtml;
+        }
+
+        // Category Breakdown
+        if (dnaReport.category_scores) {
+            let categoryHtml = '<div class="category-grid">';
+            Object.entries(dnaReport.category_scores).forEach(([category, data]) => {
+                const totalScore = data.total_score || 0;
+                const count = data.count || 0;
+                categoryHtml += `
+                    <div class="category-item">
+                        <div class="category-name">${category}</div>
+                        <div class="category-score">${totalScore > 0 ? '+' : ''}${totalScore.toFixed(4)}</div>
+                        <div class="category-count">${count} SNPs</div>
+                    </div>
+                `;
+            });
+            categoryHtml += '</div>';
+            document.getElementById('dna_categories').innerHTML = categoryHtml;
+        }
+        
+
+        // Learning Scenarios
+        if (dnaReport.scenarios) {
+            let scenariosHtml = '<div class="scenarios-table"><table><thead><tr><th>Scenario</th><th>Genetics</th><th>Method</th><th>Daily Time</th><th>Time to B2</th></tr></thead><tbody>';
+            dnaReport.scenarios.forEach(scenario => {
+                scenariosHtml += `
+                    <tr>
+                        <td><strong>${scenario.scenario}</strong></td>
+                        <td>${scenario.genetics}</td>
+                        <td>${scenario.method}</td>
+                        <td>${scenario.daily_minutes} min</td>
+                        <td>${scenario.months_to_b2.toFixed(1)} months</td>
+                    </tr>
+                `;
+            });
+            scenariosHtml += '</tbody></table></div>';
+            document.getElementById('dna_scenarios').innerHTML = scenariosHtml;
+        }
+
+        // Update plots tab with visualizations
+        updatePlotsTab(dnaReport);
+
+        // Full HTML Report - Show summary instead of full HTML to maintain clean styling
+        document.getElementById('dna_full_report').innerHTML = 
+            `<div class="output-text">
+                <p><strong>Analysis Complete:</strong> Your comprehensive DNA analysis has been processed successfully.</p>
+                <p><strong>Report Generated:</strong> ${dnaReport.metadata?.generated?.slice(0, 19) || 'Just now'}</p>
+                <p><strong>Version:</strong> GeneLingua v${dnaReport.metadata?.version || '3.5'}</p>
+                <p><strong>Ancestry:</strong> ${dnaReport.metadata?.ancestry_label || 'Not specified'}</p>
+                <p class="hint">All detailed results are displayed in the sections above and in the Plots & Charts tab.</p>
+            </div>`;
+
+    } catch (error) {
+        console.error('Error updating DNA analysis tab:', error);
+        document.getElementById('dna_score_summary').innerHTML = 
+            '<div class="output-text">Error displaying DNA analysis results. Please check the console for details.</div>';
+    }
+}
+
+// Function to update Plots tab with visualizations and charts
+function updatePlotsTab(dnaReport) {
+    try {
+        const dnaVizContainer = document.getElementById('dna_visualizations');
+        const dnaVizPlaceholder = document.getElementById('plots_dna_viz_placeholder');
+        
+        if (!dnaVizContainer) {
+            console.error('DNA visualizations container not found');
+            return;
+        }
+        
+        // DNA Visualizations
+        if (dnaReport && dnaReport.visualizations && Object.keys(dnaReport.visualizations).length > 0) {
+            let vizHtml = '<div class="visualizations-grid">';
+            Object.entries(dnaReport.visualizations).forEach(([name, base64Data]) => {
+                vizHtml += `
+                    <div class="viz-item">
+                        <h4>${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                        <img src="data:image/png;base64,${base64Data}" style="max-width: 100%; border-radius: 8px;" alt="${name}">
+                    </div>
+                `;
+            });
+            vizHtml += '</div>';
+            dnaVizContainer.innerHTML = vizHtml;
+            if (dnaVizPlaceholder) {
+                dnaVizPlaceholder.style.display = 'none';
+            }
+        } else {
+            dnaVizContainer.innerHTML = 
+                '<div class="output-text">No visualizations available. This may be due to missing dependencies (numpy, matplotlib) or other issues.</div>';
+        }
+    } catch (error) {
+        console.error('Error updating plots tab:', error);
+        const dnaVizContainer = document.getElementById('dna_visualizations');
+        if (dnaVizContainer) {
+            dnaVizContainer.innerHTML = 
+                '<div class="output-text">Error loading visualizations. Please check the console for details.</div>';
+        }
+    }
+}
+
+// Check for existing resources on page load
+async function checkExistingResources() {
+    // Get user ID from input field or current user display
+    let userId = document.getElementById('user_id').value || document.getElementById('current_user').textContent;
+
+    // Default to 'yusup' if no user is specified (since files exist for this user)
+    if (!userId || userId === 'Not logged in') {
+        userId = 'yusup';
+    }
+
+    if (userId) {
+        console.log('🔍 Checking existing resources for user:', userId);
+
+        // Check if files exist by trying to access them
+        const resourceTypes = ['pdf', 'anki', 'audio'];
+        const existingResources = [];
+
+        for (const type of resourceTypes) {
+            try {
+                const response = await fetch(`/download/${type}/${userId}`);
+                if (response.ok) {
+                    existingResources.push(type);
+                }
+            } catch (error) {
+                console.log(`${type} file not found for ${userId}`);
+            }
+        }
+
+        if (existingResources.length > 0) {
+            console.log('📁 Found existing resources:', existingResources);
+            updateResourcesTab(userId);
+        } else {
+            console.log('📁 No existing resources found, showing empty message');
+            showEmptyResourcesMessage();
+        }
+    }
+}
+
+// Show message when no resources are available
+function showEmptyResourcesMessage() {
+    const sections = [
+        { id: 'pdf_output', message: 'Generate your learning plan to create a comprehensive PDF report' },
+        { id: 'anki_output', message: 'Generate your learning plan to create Anki flashcard decks' },
+        { id: 'audio_output', message: 'Generate your learning plan to create pronunciation audio guides' }
+    ];
+
+    sections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element) {
+            element.innerHTML = `<p class="output-text">${section.message}</p>`;
+        }
+    });
+}
+
+// Update Resources Tab with download links
+function updateResourcesTab(userId) {
+    console.log('📁 Updating resources tab for user:', userId);
+
+    // Update PDF section
+    const pdfOutput = document.getElementById('pdf_output');
+    if (pdfOutput) {
+        pdfOutput.innerHTML = `
+            <div class="resource-item">
+                <button class="btn btn-download" onclick="downloadResource('pdf', '${userId}')">
+                    <i class="fas fa-file-pdf"></i> Download PDF Report
+                </button>
+                <p class="resource-desc">Complete learning analysis and personalized plan</p>
+            </div>
+        `;
+    }
+
+    // Update Anki section
+    const ankiOutput = document.getElementById('anki_output');
+    if (ankiOutput) {
+        ankiOutput.innerHTML = `
+            <div class="resource-item">
+                <button class="btn btn-download" onclick="downloadResource('anki', '${userId}')">
+                    <i class="fas fa-clone"></i> Download Anki Deck CSV
+                </button>
+                <p class="resource-desc">Flashcard deck for spaced repetition learning</p>
+            </div>
+        `;
+    }
+
+    // Update Audio section
+    const audioOutput = document.getElementById('audio_output');
+    if (audioOutput) {
+        audioOutput.innerHTML = `
+            <div class="resource-item">
+                <button class="btn btn-download" onclick="downloadResource('audio', '${userId}')">
+                    <i class="fas fa-download"></i> Download Audio Guide
+                </button>
+                <button class="btn btn-play" onclick="playAudioGuide('${userId}')">
+                    <i class="fas fa-play"></i> Play Audio Guide
+                </button>
+                <p class="resource-desc">Pronunciation guide for your vocabulary</p>
+                <audio id="audioPlayer" controls style="display: none; width: 100%; margin-top: 10px;">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        `;
+    }
+}
+
+// Download resource function
+async function downloadResource(type, userId) {
+    try {
+        console.log(`⬇️ Downloading ${type} for user ${userId}`);
+        const response = await fetch(`/download/${type}/${userId}`);
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+
+            // Set filename based on type
+            const fileExtensions = { pdf: 'pdf', anki: 'csv', audio: 'mp3' };
+            a.download = `GeneLingua_${type}_${userId}.${fileExtensions[type]}`;
+
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            console.log(`✅ ${type} downloaded successfully`);
+        } else {
+            throw new Error(`Failed to download ${type}`);
+        }
+    } catch (error) {
+        console.error(`❌ Download failed:`, error);
+        alert(`Failed to download ${type}. Please try again.`);
+    }
+}
+
+// Play audio guide function
+async function playAudioGuide(userId) {
+    try {
+        console.log(`🔊 Playing audio guide for user ${userId}`);
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioUrl = `/download/audio/${userId}`;
+
+        audioPlayer.src = audioUrl;
+        audioPlayer.style.display = 'block';
+        await audioPlayer.play();
+
+        console.log('✅ Audio guide playing');
+    } catch (error) {
+        console.error('❌ Audio playback failed:', error);
+        alert('Failed to play audio guide. Please try downloading it instead.');
+    }
+}
+
+// Helper functions - v1.1 - Fixed formatMarkdown and speech debug
 function formatMarkdown(text) {
+    // Guard against non-string input
+    if (typeof text !== 'string') {
+        console.warn('formatMarkdown received non-string:', typeof text, text);
+        return String(text || '');
+    }
     // Simple markdown formatting
     return text
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -917,9 +1283,27 @@ async function speakMessage(text) {
 
         if (response.ok) {
             const data = await response.json();
-            if (data.success && data.audio_url) {
-                // Create and play audio element
-                const audio = new Audio(data.audio_url);
+            console.log('🔍 Speech API response:', data);
+            console.log('🔍 data.success:', data.success, 'data.audio_data exists:', !!data.audio_data);
+            if (data.success && data.audio_data) {
+                // Convert hex string to audio blob
+                let audio;
+                try {
+                    const hexPairs = data.audio_data.match(/.{1,2}/g);
+                    if (!hexPairs) {
+                        throw new Error('Invalid hex data format');
+                    }
+                    const audioBytes = new Uint8Array(hexPairs.map(byte => parseInt(byte, 16)));
+                    const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Create and play audio element
+                    audio = new Audio(audioUrl);
+                } catch (conversionError) {
+                    console.error('Audio conversion error:', conversionError);
+                    throw new Error('Failed to convert audio data');
+                }
+
                 audio.volume = 0.8;
 
                 // Add loading state
@@ -1599,6 +1983,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         addWelcomeMessage();
         setupAssessmentForExperts();
+        checkExistingResources();
 
         // Debug: Test panel visibility
         const panel = document.getElementById('assessmentPanel');

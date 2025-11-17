@@ -148,6 +148,77 @@ class AudioEngine:
         finally:
             loop.close()
 
+    async def generate_speech_bytes(self, text: str, language: str = "dutch") -> bytes:
+        """
+        Generate speech as bytes without saving to file
+
+        Args:
+            text: Text to convert to speech
+            language: Target language
+
+        Returns:
+            Audio bytes
+        """
+        voice = self.VOICE_MODELS.get(language, self.VOICE_MODELS["dutch"])
+
+        communicate = edge_tts.Communicate(text, voice)
+        audio_bytes = b""
+
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_bytes += chunk["data"]
+
+        return audio_bytes
+
+    def generate_speech_bytes_sync(self, text: str, language: str = "dutch") -> bytes:
+        """
+        Generate speech as bytes without saving to file (synchronous version)
+
+        Args:
+            text: Text to convert to speech
+            language: Target language
+
+        Returns:
+            Audio bytes
+        """
+        try:
+            # Check if event loop is running
+            try:
+                loop = asyncio.get_running_loop()
+                # If we're here, there's a running loop - use thread executor
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        self._run_speech_bytes_in_thread,
+                        text,
+                        language
+                    )
+                    return future.result(timeout=30)
+            except RuntimeError:
+                # No running loop - create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(
+                        self.generate_speech_bytes(text, language)
+                    )
+                finally:
+                    loop.close()
+        except Exception as e:
+            print(f"❌ Speech bytes generation failed: {e}")
+            return b""
+
+    def _run_speech_bytes_in_thread(self, text: str, language: str) -> bytes:
+        """Helper to run async speech bytes generation in separate thread"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(
+                self.generate_speech_bytes(text, language)
+            )
+        finally:
+            loop.close()
+
     def speech_to_text(
         self,
         audio_source: Optional[sr.AudioSource] = None,

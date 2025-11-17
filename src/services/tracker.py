@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
-from tools.utils import load_json, save_json
+from src.utils.utils import load_json, save_json
 
 
 def run_tracker(user_dir="data/users/alex"):

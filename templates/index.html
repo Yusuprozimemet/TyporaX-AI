@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GENELINGUA - DNA + AI Language Coach</title>
-    <!-- Prevent favicon 404 -->
-    <link rel="icon" href="data:,">
+    <!-- Custom favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/icon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/images/icon.ico">
     <link rel="stylesheet" href="/static/vscode.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -14,16 +15,19 @@
 <body>
     <!-- Activity Bar (Left-most sidebar) -->
     <div class="activity-bar">
-        <div class="activity-item active" data-panel="explorer" title="Explorer">
+        <div class="activity-item active" data-panel="profile" title="User Profile">
             <i class="fas fa-user-circle"></i>
         </div>
-        <div class="activity-item" data-panel="search" title="Learning">
+        <div class="activity-item" data-panel="dna" title="DNA Analysis">
+            <i class="fas fa-dna"></i>
+        </div>
+        <div class="activity-item" data-panel="lessons" title="Lesson Generator">
             <i class="fas fa-book"></i>
         </div>
-        <div class="activity-item" data-panel="git" title="Progress">
+        <div class="activity-item" data-panel="progress" title="Progress">
             <i class="fas fa-chart-line"></i>
         </div>
-        <div class="activity-item" data-panel="extensions" title="Resources">
+        <div class="activity-item" data-panel="resources" title="Resources">
             <i class="fas fa-download"></i>
         </div>
         <div class="activity-spacer"></div>
@@ -55,7 +59,25 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-dna"></i> GENETIC & PERSONAL
+                <i class="fas fa-flag"></i> LANGUAGE PREFERENCE
+            </div>
+
+            <div class="form-group">
+                <label for="target_language">
+                    <i class="fas fa-flag"></i> Target Language
+                </label>
+                <select id="target_language">
+                    <option value="japanese" selected>🇯🇵 Japanese (日本語)</option>
+                    <option value="dutch">🇳🇱 Dutch (Nederlands)</option>
+                    <option value="chinese">🇨🇳 Chinese (中文)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- DNA Analysis Content (hidden by default) -->
+        <div class="sidebar-content" id="dna-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-user"></i> PERSONAL PROFILE
             </div>
 
             <div class="form-group">
@@ -100,18 +122,35 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-language"></i> LANGUAGE LEARNING
+                <i class="fas fa-dna"></i> DNA DATA
             </div>
 
             <div class="form-group">
-                <label for="target_language">
-                    <i class="fas fa-flag"></i> Target Language
-                </label>
-                <select id="target_language">
-                    <option value="japanese" selected>🇯🇵 Japanese (日本語)</option>
-                    <option value="dutch">🇳🇱 Dutch (Nederlands)</option>
-                    <option value="chinese">🇨🇳 Chinese (中文)</option>
-                </select>
+                <div class="hint" style="margin-bottom: 8px;">💡 Upload your DNA file for personalized learning analysis</div>
+                <input type="file" id="dna_file" accept=".txt,.zip">
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i> ANALYSIS RESULTS
+            </div>
+
+            <div class="form-group">
+                <div class="status-box" id="dna_analysis_status">
+                    Complete the form above and upload DNA file to see genetic learning analysis
+                </div>
+            </div>
+
+            <button class="btn-primary" id="analyzeDnaBtn">
+                <i class="fas fa-microscope"></i> Analyze DNA & Generate Method
+            </button>
+        </div>
+
+        <!-- Lesson Generator Content (hidden by default) -->
+        <div class="sidebar-content" id="lessons-content" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-book-open"></i> LESSON GENERATOR
             </div>
 
             <div class="form-group">
@@ -126,41 +165,42 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="fas fa-dna"></i> DNA DATA (OPTIONAL)
+                <i class="fas fa-info-circle"></i> LEARNING STATUS
             </div>
 
             <div class="form-group">
-                <div class="hint" style="margin-bottom: 8px;">💡 Upload once - saved for future use</div>
-                <input type="file" id="dna_file" accept=".txt,.zip">
+                <div class="status-box" id="learning_method_status">
+                    Complete DNA analysis first to see your personalized learning method
+                </div>
             </div>
 
-            <button class="btn-primary" id="generateBtn">
-                <i class="fas fa-rocket"></i> Generate Learning Plan
+            <button class="btn-primary" id="generateLessonBtn">
+                <i class="fas fa-graduation-cap"></i> Generate Today's Lesson
             </button>
         </div>
 
         <!-- Learning Content (hidden by default) -->
-        <div class="sidebar-content" id="learning-content" style="display: none;">
+        <div class="sidebar-content" id="progress-content" style="display: none;">
             <div class="section-title">
                 <i class="fas fa-graduation-cap"></i> LEARNING PROGRESS
             </div>
-            
+
             <div class="progress-item">
                 <div class="progress-label">Current User:</div>
                 <div class="progress-value" id="current_user">Not logged in</div>
             </div>
-            
+
             <div class="progress-item">
                 <div class="progress-label">Target Language:</div>
                 <div class="progress-value" id="current_language">Japanese</div>
             </div>
-            
+
             <div class="section-divider"></div>
-            
+
             <div class="section-title">
                 <i class="fas fa-chart-bar"></i> SESSION STATS
             </div>
-            
+
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">0</div>
@@ -178,7 +218,7 @@
             <div class="section-title">
                 <i class="fas fa-trophy"></i> ACHIEVEMENTS
             </div>
-            
+
             <div class="achievement-item">
                 <i class="fas fa-star"></i>
                 <div class="achievement-text">
@@ -186,13 +226,13 @@
                     <div class="achievement-desc">Started learning journey</div>
                 </div>
             </div>
-            
+
             <div class="section-divider"></div>
-            
+
             <div class="section-title">
                 <i class="fas fa-calendar-week"></i> WEEKLY PROGRESS
             </div>
-            
+
             <div class="progress-chart">
                 <div class="chart-placeholder">
                     <i class="fas fa-chart-line"></i>
@@ -204,37 +244,43 @@
         <!-- Resources Content (hidden by default) -->
         <div class="sidebar-content" id="resources-content" style="display: none;">
             <div class="section-title">
-                <i class="fas fa-download"></i> DOWNLOADS
+                <i class="fas fa-file-pdf"></i> PDF REPORT
             </div>
-            
-            <div class="resource-item">
-                <i class="fas fa-file-pdf"></i>
-                <div class="resource-info">
-                    <div class="resource-name">Learning Report</div>
-                    <div class="resource-size">Generate first</div>
-                </div>
+            <div id="pdf_output">
+                <p class="output-text">Generate your learning plan to download the complete PDF report</p>
             </div>
-            
-            <div class="resource-item">
-                <i class="fas fa-clone"></i>
-                <div class="resource-info">
-                    <div class="resource-name">Anki Deck</div>
-                    <div class="resource-size">Generate first</div>
-                </div>
-            </div>
-            
+
             <div class="section-divider"></div>
-            
+
+            <div class="section-title">
+                <i class="fas fa-clone"></i> ANKI DECK
+            </div>
+            <div id="anki_output">
+                <p class="output-text">Your Anki flashcard deck will be available here for spaced repetition practice
+                </p>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
+                <i class="fas fa-volume-up"></i> AUDIO GUIDE
+            </div>
+            <div id="audio_output">
+                <p class="output-text">Pronunciation audio will be available here</p>
+            </div>
+
+            <div class="section-divider"></div>
+
             <div class="section-title">
                 <i class="fas fa-link"></i> USEFUL LINKS
             </div>
-            
+
             <div class="link-item">
                 <a href="#" class="resource-link">
                     <i class="fas fa-external-link-alt"></i> Dutch Grammar Guide
                 </a>
             </div>
-            
+
             <div class="link-item">
                 <a href="#" class="resource-link">
                     <i class="fas fa-external-link-alt"></i> Pronunciation Practice
@@ -247,7 +293,7 @@
             <div class="section-title">
                 <i class="fas fa-palette"></i> APPEARANCE
             </div>
-            
+
             <div class="form-group">
                 <label for="theme_select">
                     <i class="fas fa-moon"></i> Theme
@@ -258,13 +304,13 @@
                     <option value="auto">Auto (System)</option>
                 </select>
             </div>
-            
+
             <div class="section-divider"></div>
-            
+
             <div class="section-title">
                 <i class="fas fa-volume-up"></i> AUDIO SETTINGS
             </div>
-            
+
             <div class="form-group">
                 <label for="voice_speed">
                     <i class="fas fa-tachometer-alt"></i> Speech Speed
@@ -272,20 +318,20 @@
                 <input type="range" id="voice_speed" min="0.5" max="2" step="0.1" value="1">
                 <div class="hint">Current: Normal (1.0x)</div>
             </div>
-            
+
             <div class="form-group">
                 <div class="checkbox-group">
                     <input type="checkbox" id="auto_speak" checked>
                     <label for="auto_speak">Auto-speak expert responses</label>
                 </div>
             </div>
-            
+
             <div class="section-divider"></div>
-            
+
             <div class="section-title">
                 <i class="fas fa-database"></i> DATA
             </div>
-            
+
             <button class="btn-secondary" id="clearDataBtn">
                 <i class="fas fa-trash"></i> Clear All Data
             </button>
@@ -299,8 +345,8 @@
             <div class="tab active" data-tab="overview">
                 <i class="fas fa-home"></i> Overview
             </div>
-            <div class="tab" data-tab="dna">
-                <i class="fas fa-dna"></i> DNA Analysis
+            <div class="tab" data-tab="plots">
+                <i class="fas fa-chart-area"></i> Plots & Charts
             </div>
             <div class="tab" data-tab="lesson">
                 <i class="fas fa-book-open"></i> Today's Lesson
@@ -313,9 +359,6 @@
             </div>
             <div class="tab" data-tab="experts">
                 <i class="fas fa-user-tie"></i> Talk Experts
-            </div>
-            <div class="tab" data-tab="resources">
-                <i class="fas fa-folder-open"></i> Resources
             </div>
         </div>
 
@@ -344,39 +387,94 @@
                     </div>
                 </div>
 
-                <div class="content-grid">
-                    <div class="card">
-                        <h3><i class="fas fa-book"></i> Vocabulary Words</h3>
-                        <div id="words_output" class="output-text">
-                            Your vocabulary will appear here
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3><i class="fas fa-comments"></i> Practice Sentences</h3>
-                        <div id="sentences_output" class="output-text">
-                            Your practice sentences will appear here
-                        </div>
-                    </div>
-                </div>
+                <!-- Vocabulary and practice sentence cards removed from Overview -->
             </div>
 
             <!-- DNA Analysis Tab -->
             <div class="tab-content" id="dna-content">
-                <h2><i class="fas fa-dna"></i> DNA Analysis Report</h2>
+                <h2><i class="fas fa-dna"></i> Comprehensive DNA Analysis Report</h2>
+                
+                <!-- Overall Score Summary -->
                 <div class="card">
-                    <h3>Genetic Learning Aptitude</h3>
-                    <div id="dna_detail" class="output-text">
-                        No data available yet
+                    <h3><i class="fas fa-chart-line"></i> Polygenic Score Summary</h3>
+                    <div id="dna_score_summary" class="output-text">
+                        Complete DNA analysis to see your genetic language learning aptitude
                     </div>
                 </div>
+
+                <!-- Interpretation -->
                 <div class="card">
-                    <h3>Detailed DNA Report</h3>
-                    <div id="dna_plot_container">
-                        <img id="dna_plot" style="display: none; max-width: 100%; border-radius: 8px;">
-                        <div class="output-text" id="dna_plot_placeholder">
-                            DNA visualization will appear here after analysis
+                    <h3><i class="fas fa-brain"></i> What This Means for You</h3>
+                    <div id="dna_interpretation" class="output-text">
+                        Your personalized interpretation will appear here
+                    </div>
+                </div>
+
+                <!-- Top Contributing SNPs -->
+                <div class="card">
+                    <h3><i class="fas fa-microscope"></i> Top Contributing Genetic Variants</h3>
+                    <div id="dna_top_snps" class="output-text">
+                        Key genetic variants affecting your language learning will appear here
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="card">
+                    <h3><i class="fas fa-pie-chart"></i> Cognitive Category Breakdown</h3>
+                    <div id="dna_categories" class="output-text">
+                        Breakdown by phonological processing, working memory, and other cognitive domains
+                    </div>
+                </div>
+
+                <!-- Learning Scenarios -->
+                <div class="card">
+                    <h3><i class="fas fa-calculator"></i> Learning Time Predictions</h3>
+                    <div id="dna_scenarios" class="output-text">
+                        Predicted learning times based on your genetics and different study approaches
+                    </div>
+                </div>
+
+
+
+                <!-- Analysis Summary -->
+                <div class="card">
+                    <h3><i class="fas fa-info-circle"></i> Analysis Summary</h3>
+                    <div id="dna_full_report" class="output-text">
+                        Complete DNA analysis to see your personalized report summary
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plots & Charts Tab -->
+            <div class="tab-content" id="plots-content">
+                <h2><i class="fas fa-chart-area"></i> Visualizations & Charts</h2>
+                
+                <!-- DNA Plots -->
+                <div class="card">
+                    <h3><i class="fas fa-dna"></i> DNA Analysis Visualizations</h3>
+                    <div id="dna_visualizations">
+                        <div class="output-text" id="plots_dna_viz_placeholder">
+                            Complete DNA analysis to see charts and visualizations
                         </div>
+                    </div>
+                </div>
+
+                <!-- Progress Plots -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Learning Progress</h3>
+                    <div id="progress_plot_container">
+                        <img id="progress_plot" style="display: none; max-width: 100%; border-radius: 8px;">
+                        <div class="output-text" id="progress_plot_placeholder">
+                            Progress visualization will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Charts -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-pie"></i> Learning Analytics</h3>
+                    <div id="learning_analytics" class="output-text">
+                        Learning analytics and performance charts will appear here
                     </div>
                 </div>
             </div>
@@ -396,15 +494,7 @@
                         No sentences loaded yet
                     </div>
                 </div>
-                <div class="card">
-                    <h3><i class="fas fa-chart-line"></i> Progress Tracker</h3>
-                    <div id="progress_plot_container">
-                        <img id="progress_plot" style="display: none; max-width: 100%; border-radius: 8px;">
-                        <div class="output-text" id="progress_plot_placeholder">
-                            Progress visualization will appear here
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             <!-- Anki Flashcards Tab -->
@@ -508,32 +598,7 @@
                 </div>
             </div>
 
-            <!-- Resources Tab -->
-            <div class="tab-content" id="resources-content">
-                <h2><i class="fas fa-folder-open"></i> Learning Resources</h2>
 
-                <div class="card">
-                    <h3><i class="fas fa-file-pdf"></i> PDF Report</h3>
-                    <div id="pdf_output">
-                        <p class="output-text">Generate your learning plan to download the complete PDF report</p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3><i class="fas fa-clone"></i> Anki Deck</h3>
-                    <div id="anki_output">
-                        <p class="output-text">Your Anki flashcard deck will be available here for spaced repetition
-                            practice</p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3><i class="fas fa-volume-up"></i> Audio Guide</h3>
-                    <div id="audio_output">
-                        <p class="output-text">Pronunciation audio will be available here</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

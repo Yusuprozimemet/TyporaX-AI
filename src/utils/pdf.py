@@ -8,7 +8,7 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 
 
 def generate_pdf(dna_report, method, progress, lesson, user_id):
-    from tools.utils import ensure_dir
+    from src.utils.utils import ensure_dir
     user_dir = ensure_dir(f"data/users/{user_id}")
     path = f"{user_dir}/GENELINGUA_COMPREHENSIVE_REPORT.pdf"
 

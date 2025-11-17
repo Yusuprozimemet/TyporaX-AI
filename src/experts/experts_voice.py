@@ -20,7 +20,7 @@ import queue
 
 # Import your experts
 import sys
-sys.path.append('.')
+# Path append no longer needed with proper package structure
 
 
 class VoiceInteractionEngine:
