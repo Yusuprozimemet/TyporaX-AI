@@ -2,7 +2,8 @@
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green.svg)](https://fastapi.tiangolo.com)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 
 **TyporaX-AI** is a personalized language learning platform that combines **AI-powered coaching** with **personality-based customization** to create tailored language learning experiences. By analyzing your personality type (MBTI) and daily activities, TyporaX-AI generates personalized study methods, vocabulary lessons, and progress tracking optimized for your learning style.
 
