@@ -3,11 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TyporaX-AI - AI Language Coach</title>
-    <!-- Custom favicon -->
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <!-- Icons and Theme -->
     <link rel="icon" type="image/x-icon" href="/static/images/icon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/static/images/icon.ico">
+    <link rel="apple-touch-icon" href="/static/images/icon.ico">
+    <meta name="theme-color" content="#007acc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TyporaX-AI">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="/static/vscode.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@latest/dist/codicon.css" />
 </head>
@@ -504,8 +515,16 @@
             </button>
         </div>
         <div class="status-right">
-            <span><i class="codicon codicon-account"></i> <span id="current_user">Not logged in</span></span>
-            <span><i class="codicon codicon-symbol-namespace"></i> <span id="current_language">Japanese</span></span>
+            <button class="status-btn" id="fullscreenToggle" title="Toggle Fullscreen (F11)"
+                onclick="toggleFullscreen()">
+                <i class="codicon codicon-screen-full"></i>
+            </button>
+            <button class="status-btn" id="installPWA" title="Install App" onclick="installPWA()"
+                style="display: none;">
+                <i class="codicon codicon-desktop-download"></i>
+            </button>
+            <!-- Status bar: User and language are shown in the sidebar progress panel instead -->
+            <!-- Removed duplicate current_user and current_language spans to simplify status bar -->
         </div>
     </div>
 
@@ -646,6 +665,8 @@
                     </button>
                 </div>
             </div>
+            <!-- Vertical resize handle -->
+            <div class="assessment-resizer" id="assessmentResizer" title="Resize"></div>
         </div>
     </div>
 

@@ -1,3 +1,122 @@
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+            .then(registration => {
+                console.log('✅ PWA Service Worker registered:', registration.scope);
+
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New content available, refresh page
+                            if (confirm('New version available! Refresh to update?')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.log('❌ PWA Service Worker registration failed:', error);
+            });
+    });
+}
+
+// PWA Install Prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('💾 PWA install prompt available');
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show custom install button/banner if desired
+    showInstallButton();
+});
+
+// PWA Install Function
+function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('✅ User accepted PWA install');
+            } else {
+                console.log('❌ User dismissed PWA install');
+            }
+            deferredPrompt = null;
+        });
+    }
+}
+
+// Show install button
+function showInstallButton() {
+    const installBtn = document.getElementById('installPWA');
+    if (installBtn) {
+        installBtn.style.display = 'inline-block';
+    }
+    console.log('📱 PWA can be installed - install button shown');
+}
+
+// Fullscreen toggle function
+function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        enterFullscreen();
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+// Update fullscreen button icon
+document.addEventListener('fullscreenchange', updateFullscreenIcon);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+document.addEventListener('msfullscreenchange', updateFullscreenIcon);
+
+function updateFullscreenIcon() {
+    const fullscreenBtn = document.getElementById('fullscreenToggle');
+    if (fullscreenBtn) {
+        const icon = fullscreenBtn.querySelector('i');
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+            icon.className = 'codicon codicon-screen-normal';
+            fullscreenBtn.title = 'Exit Fullscreen (F11)';
+        } else {
+            icon.className = 'codicon codicon-screen-full';
+            fullscreenBtn.title = 'Enter Fullscreen (F11)';
+        }
+    }
+}
+
+// Fullscreen API for desktop app experience
+function enterFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    }
+}
+
+// Keyboard shortcut for fullscreen (F11 alternative)
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'F11' || (e.ctrlKey && e.shiftKey && e.key === 'F')) {
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+            enterFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+});
+
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1313,11 +1432,17 @@ class AssessmentPanel {
         this.currentUserId = 'unknown';
         this.isDragging = false;
         this.isMinimized = false;
+        this._savedHeight = null;
         this.latestAssessment = null;
 
         this.initializeElements();
         this.setupEventListeners();
         this.setupDragging();
+        this.setupResizer();
+        // Restore position if saved
+        this._restorePanelPosition();
+        // Ensure panel is within bounds on window resize
+        window.addEventListener('resize', () => this._ensurePositionInBounds());
     } initializeElements() {
         // Get all assessment UI elements
         this.elements = {
@@ -1340,6 +1465,23 @@ class AssessmentPanel {
 
         // Clear initial content
         this.clearAssessmentData();
+    }
+
+    _ensurePositionInBounds() {
+        try {
+            const rect = this.panel.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - rect.height;
+            let left = parseInt(this.panel.style.left || rect.left);
+            let top = parseInt(this.panel.style.top || rect.top);
+            left = Math.max(0, Math.min(left, maxX));
+            top = Math.max(0, Math.min(top, maxY));
+            this.panel.style.left = left + 'px';
+            this.panel.style.top = top + 'px';
+            this.panel.style.right = 'auto';
+        } catch (e) {
+            // ignore
+        }
     }
 
     setupEventListeners() {
@@ -1404,6 +1546,20 @@ class AssessmentPanel {
             header.style.cursor = 'grabbing';
         });
 
+        // Double click header to center panel
+        header.addEventListener('dblclick', (e) => {
+            const centerX = Math.max(0, Math.floor((window.innerWidth - this.panel.offsetWidth) / 2));
+            const centerY = Math.max(0, Math.floor((window.innerHeight - this.panel.offsetHeight) / 2));
+            this.panel.style.left = centerX + 'px';
+            this.panel.style.top = centerY + 'px';
+            this.panel.style.right = 'auto';
+            try {
+                localStorage.setItem('assessment_panel_pos', JSON.stringify({ left: centerX, top: centerY }));
+            } catch (e) {
+                console.log('⚠️ Could not save center panel position', e);
+            }
+        });
+
         const handleMouseMove = (e) => {
             if (!isDragging) return;
 
@@ -1429,7 +1585,138 @@ class AssessmentPanel {
 
             this.panel.style.transition = '';
             header.style.cursor = 'move';
+            // Save the panel position
+            try {
+                const left = parseInt(this.panel.style.left || this.panel.getBoundingClientRect().left);
+                const top = parseInt(this.panel.style.top || this.panel.getBoundingClientRect().top);
+                localStorage.setItem('assessment_panel_pos', JSON.stringify({ left, top }));
+            } catch (e) {
+                console.log('⚠️ Could not save assessment panel position', e);
+            }
         };
+
+        // Touch support
+        header.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('btn-close')) return;
+            isDragging = true;
+            const touch = e.touches[0];
+            const rect = this.panel.getBoundingClientRect();
+            dragOffset.x = touch.clientX - rect.left;
+            dragOffset.y = touch.clientY - rect.top;
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            this.panel.style.transition = 'none';
+            header.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        const handleTouchMove = (e) => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            const x = touch.clientX - dragOffset.x;
+            const y = touch.clientY - dragOffset.y;
+            const maxX = window.innerWidth - this.panel.offsetWidth;
+            const maxY = window.innerHeight - this.panel.offsetHeight;
+            const boundedX = Math.max(0, Math.min(x, maxX));
+            const boundedY = Math.max(0, Math.min(y, maxY));
+            this.panel.style.left = `${boundedX}px`;
+            this.panel.style.top = `${boundedY}px`;
+            this.panel.style.right = 'auto';
+            e.preventDefault();
+        };
+
+        const handleTouchEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+            this.panel.style.transition = '';
+            header.style.cursor = 'move';
+            // Save the final position
+            try {
+                const left = parseInt(this.panel.style.left || this.panel.getBoundingClientRect().left);
+                const top = parseInt(this.panel.style.top || this.panel.getBoundingClientRect().top);
+                localStorage.setItem('assessment_panel_pos', JSON.stringify({ left, top }));
+            } catch (e) {
+                console.log('⚠️ Could not save assessment panel position after touch', e);
+            }
+        };
+    }
+
+    _restorePanelPosition() {
+        try {
+            const saved = localStorage.getItem('assessment_panel_pos');
+            if (saved) {
+                const pos = JSON.parse(saved);
+                const maxX = window.innerWidth - this.panel.offsetWidth;
+                const maxY = window.innerHeight - this.panel.offsetHeight;
+                const left = Math.max(0, Math.min(pos.left, maxX));
+                const top = Math.max(0, Math.min(pos.top, maxY));
+                this.panel.style.left = left + 'px';
+                this.panel.style.top = top + 'px';
+                this.panel.style.right = 'auto';
+            }
+        } catch (e) {
+            console.log('⚠️ Could not restore assessment panel position', e);
+        }
+    }
+
+    setupResizer() {
+        const resizer = this.panel?.querySelector('.assessment-resizer');
+        if (!resizer) return;
+
+        let isResizing = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        // Apply saved height if present
+        try {
+            const savedHeight = localStorage.getItem('assessment_panel_height');
+            if (savedHeight) {
+                this.panel.style.height = savedHeight + 'px';
+                this.panel.style.bottom = 'auto';
+            }
+        } catch (e) {
+            console.log('⚠️ Could not read assessment panel height from storage', e);
+        }
+
+        const onMouseMove = (e) => {
+            if (!isResizing) return;
+            const delta = e.clientY - startY; // positive when moving down
+            let newHeight = startHeight + delta;
+            const minH = 120;
+            const maxH = Math.max(220, window.innerHeight - 120);
+            newHeight = Math.max(minH, Math.min(newHeight, maxH));
+
+            this.panel.style.height = newHeight + 'px';
+            this.panel.style.bottom = 'auto';
+        };
+
+        const onMouseUp = (e) => {
+            if (!isResizing) return;
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            // Save height
+            try {
+                localStorage.setItem('assessment_panel_height', parseInt(this.panel.style.height || this.panel.offsetHeight));
+            } catch (e) {
+                console.log('⚠️ Could not save assessment panel height', e);
+            }
+        };
+
+        resizer.addEventListener('mousedown', (e) => {
+            if (this.isMinimized) return;
+            isResizing = true;
+            startY = e.clientY;
+            startHeight = this.panel.offsetHeight;
+            document.body.style.cursor = 'ns-resize';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            e.preventDefault();
+        });
     }
 
     show() {
@@ -1470,7 +1757,27 @@ class AssessmentPanel {
         if (this.isMinimized) {
             this.panel.classList.remove('minimized');
             this.isMinimized = false;
+            // Restore saved height if present
+            try {
+                const savedHeight = this._savedHeight || localStorage.getItem('assessment_panel_height');
+                if (savedHeight) {
+                    this.panel.style.height = parseInt(savedHeight) + 'px';
+                    this.panel.style.bottom = 'auto';
+                } else {
+                    this.panel.style.height = '';
+                    this.panel.style.bottom = 'auto';
+                }
+            } catch (e) {
+                console.log('⚠️ Could not restore panel height', e);
+            }
         } else {
+            // Save current height before minimizing
+            try {
+                this._savedHeight = parseInt(this.panel.style.height || this.panel.offsetHeight);
+                localStorage.setItem('assessment_panel_height', this._savedHeight);
+            } catch (e) {
+                console.log('⚠️ Could not save panel height before minimizing', e);
+            }
             this.panel.classList.add('minimized');
             this.isMinimized = true;
         }

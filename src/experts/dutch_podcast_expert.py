@@ -134,9 +134,10 @@ class DutchPodcastConversation:
 
         try:
             # Try with primary model first with enhanced prompt
-            enhanced_messages = self._enhance_conversation_context(messages, host)
+            enhanced_messages = self._enhance_conversation_context(
+                messages, host)
             response_text = await self._call_api(enhanced_messages, DEFAULT_MODEL)
-            
+
             if not response_text:
                 # Second attempt: Retry with fallback model and different approach
                 retry_messages = self._create_retry_prompt(messages, host)
@@ -146,26 +147,28 @@ class DutchPodcastConversation:
                 # Third attempt: Try primary model again with simplified prompt
                 simple_messages = self._create_simple_prompt(host)
                 response_text = await self._call_api(simple_messages, DEFAULT_MODEL)
-                
+
             if not response_text:
                 # Fourth attempt: Try fallback model with simple prompt
                 simple_messages = self._create_simple_prompt(host)
                 response_text = await self._call_api(simple_messages, FALLBACK_MODEL)
-                
+
             if not response_text:
                 # Final attempt: Very direct approach
                 direct_messages = self._create_direct_statement_prompt(host)
                 response_text = await self._call_api(direct_messages, DEFAULT_MODEL)
-                
+
             if not response_text:
                 # Only now fall back to questions (should be very rare)
                 response_text = self._generate_topic_question(host)
-                print(f"⚠️ Using fallback question for {host['name']}: {response_text[:50]}...")
+                print(
+                    f"⚠️ Using fallback question for {host['name']}: {response_text[:50]}...")
 
             # Check for recent duplicate responses
             if self._is_recent_duplicate(response_text, host['name']):
                 print(f"🔄 Detected duplicate response, generating alternative...")
-                response_text = self._generate_alternative_response(host, response_text)
+                response_text = self._generate_alternative_response(
+                    host, response_text)
 
             # Add to conversation history
             self.conversation_history.append({
@@ -206,13 +209,13 @@ class DutchPodcastConversation:
     def _enhance_conversation_context(self, messages: List[Dict], host: Dict) -> List[Dict]:
         """Enhance messages with more specific context for better responses"""
         enhanced_messages = messages.copy()
-        
+
         # Get last few messages for better context
         recent_context = ""
         if len(self.conversation_history) >= 2:
             last_messages = self.conversation_history[-2:]
             recent_context = f"\nRecente uitwisselingen: {[msg['content'] for msg in last_messages]}"
-        
+
         # Add specific context about current conversation state
         context_prompt = f"""
         Je bent {host['name']} in een Nederlandse podcast over: {self.current_topic}
@@ -229,7 +232,7 @@ class DutchPodcastConversation:
         
         FOCUS: Deel specifieke informatie, voorbeelden of inzichten over {self.current_topic}
         """
-        
+
         enhanced_messages.append({"role": "system", "content": context_prompt})
         return enhanced_messages
 
@@ -246,11 +249,11 @@ class DutchPodcastConversation:
             - Nieuw perspektief op het onderwerp
             """}
         ]
-        
+
         # Add last few messages for context
         if len(self.conversation_history) > 0:
             retry_messages.extend(self.conversation_history[-3:])
-            
+
         return retry_messages
 
     def _create_simple_prompt(self, host: Dict) -> List[Dict]:
@@ -280,11 +283,11 @@ class DutchPodcastConversation:
         """Generate a varied, context-aware question as last resort"""
         topic = self.current_topic.lower()
         conversation_length = len(self.conversation_history)
-        
+
         # Track recently used questions to avoid repetition
         if not hasattr(self, '_recent_questions'):
             self._recent_questions = []
-        
+
         # Topic-specific questions for Emma (enthusiastic, personal)
         if host['name'] == 'Emma':
             if 'ai' in topic or 'kunstmatige intelligentie' in topic:
@@ -307,7 +310,7 @@ class DutchPodcastConversation:
                     f"Hebben jullie al ervaring met {self.current_topic}? Vertel eens jullie verhaal!",
                     f"Wat zou {self.current_topic} kunnen betekenen voor onze toekomst, denken jullie?"
                 ]
-        
+
         # Topic-specific questions for Daan (analytical, factual)
         else:  # Daan
             if 'ai' in topic or 'kunstmatige intelligentie' in topic:
@@ -330,41 +333,44 @@ class DutchPodcastConversation:
                     f"Hoe positioneert Nederland zich internationaal op het gebied van {self.current_topic}?",
                     f"Wat zijn volgens jullie de belangrijkste trends rond {self.current_topic}?"
                 ]
-        
+
         # Filter out recently used questions
-        available_questions = [q for q in questions if q not in self._recent_questions]
+        available_questions = [
+            q for q in questions if q not in self._recent_questions]
         if not available_questions:
             # If all questions were used recently, reset and use all
             self._recent_questions = []
             available_questions = questions
-        
+
         # Select a question and add to recent list
         import random
         selected_question = random.choice(available_questions)
         self._recent_questions.append(selected_question)
-        
+
         # Keep only last 3 questions to prevent long-term repetition
         if len(self._recent_questions) > 3:
             self._recent_questions = self._recent_questions[-3:]
-            
+
         return selected_question
 
     def _is_recent_duplicate(self, response_text: str, speaker_name: str) -> bool:
         """Check if response is too similar to recent messages from same speaker"""
         # Check last 4 messages for duplicates from same speaker
-        recent_messages = self.conversation_history[-4:] if len(self.conversation_history) >= 4 else self.conversation_history
-        
+        recent_messages = self.conversation_history[-4:] if len(
+            self.conversation_history) >= 4 else self.conversation_history
+
         for msg in recent_messages:
             if f"{speaker_name}:" in msg.get('content', ''):
                 # Extract just the response part
-                prev_response = msg['content'].split(':', 1)[1].strip() if ':' in msg['content'] else msg['content']
-                
+                prev_response = msg['content'].split(':', 1)[1].strip(
+                ) if ':' in msg['content'] else msg['content']
+
                 # Simple similarity check
                 if len(response_text) > 20 and len(prev_response) > 20:
                     # Check for exact matches or very similar starts
                     if response_text == prev_response or response_text[:30] == prev_response[:30]:
                         return True
-                        
+
         return False
 
     def _generate_alternative_response(self, host: Dict, original_response: str) -> str:
@@ -381,7 +387,7 @@ class DutchPodcastConversation:
                 f"Als we het breder bekijken, {self.current_topic} raakt aan meerdere thema's."
             ]
         }
-        
+
         return alternatives.get(host['name'], alternatives['Emma'])[0]
 
     async def _call_api(self, messages: List[Dict], model: str) -> Optional[str]:
