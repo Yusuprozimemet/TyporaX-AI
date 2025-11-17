@@ -48,6 +48,7 @@ class DutchPodcastConversation:
         self.conversation_history = []
         self.current_topic = ""
         self.is_active = False
+        self._recent_questions = []  # Track recent fallback questions
         self.hosts = DUTCH_HOSTS
         self.current_speaker = "host1"  # Start with Emma
 
@@ -132,20 +133,39 @@ class DutchPodcastConversation:
         ]
 
         try:
-            # Try with primary model first
-            response_text = await self._call_api(messages, DEFAULT_MODEL)
+            # Try with primary model first with enhanced prompt
+            enhanced_messages = self._enhance_conversation_context(messages, host)
+            response_text = await self._call_api(enhanced_messages, DEFAULT_MODEL)
+            
             if not response_text:
-                response_text = await self._call_api(messages, FALLBACK_MODEL)
+                # Second attempt: Retry with fallback model and different approach
+                retry_messages = self._create_retry_prompt(messages, host)
+                response_text = await self._call_api(retry_messages, FALLBACK_MODEL)
 
             if not response_text:
-                # Use fallback responses from prompt manager
-                fallback_data = get_prompt_config(
-                    'dutch_podcast_expert', 'fallback_responses')
-                if fallback_data and isinstance(fallback_data, list):
-                    response_text = random.choice(fallback_data)
-                else:
-                    # Ultimate fallback
-                    response_text = "Dat is een interessant punt! Wat denken onze luisteraars hiervan?"
+                # Third attempt: Try primary model again with simplified prompt
+                simple_messages = self._create_simple_prompt(host)
+                response_text = await self._call_api(simple_messages, DEFAULT_MODEL)
+                
+            if not response_text:
+                # Fourth attempt: Try fallback model with simple prompt
+                simple_messages = self._create_simple_prompt(host)
+                response_text = await self._call_api(simple_messages, FALLBACK_MODEL)
+                
+            if not response_text:
+                # Final attempt: Very direct approach
+                direct_messages = self._create_direct_statement_prompt(host)
+                response_text = await self._call_api(direct_messages, DEFAULT_MODEL)
+                
+            if not response_text:
+                # Only now fall back to questions (should be very rare)
+                response_text = self._generate_topic_question(host)
+                print(f"⚠️ Using fallback question for {host['name']}: {response_text[:50]}...")
+
+            # Check for recent duplicate responses
+            if self._is_recent_duplicate(response_text, host['name']):
+                print(f"🔄 Detected duplicate response, generating alternative...")
+                response_text = self._generate_alternative_response(host, response_text)
 
             # Add to conversation history
             self.conversation_history.append({
@@ -183,6 +203,187 @@ class DutchPodcastConversation:
                 "speaker_key": host_key
             }
 
+    def _enhance_conversation_context(self, messages: List[Dict], host: Dict) -> List[Dict]:
+        """Enhance messages with more specific context for better responses"""
+        enhanced_messages = messages.copy()
+        
+        # Get last few messages for better context
+        recent_context = ""
+        if len(self.conversation_history) >= 2:
+            last_messages = self.conversation_history[-2:]
+            recent_context = f"\nRecente uitwisselingen: {[msg['content'] for msg in last_messages]}"
+        
+        # Add specific context about current conversation state
+        context_prompt = f"""
+        Je bent {host['name']} in een Nederlandse podcast over: {self.current_topic}
+        
+        KRITISCHE INSTRUCTIES:
+        - Geef NIEUWE, SPECIFIEKE informatie over dit onderwerp
+        - Gebruik concrete Nederlandse voorbeelden of actuele feiten
+        - ABSOLUUT GEEN generieke uitspraken zoals 'interessant punt' of 'goed punt'
+        - Maximaal 2-3 inhoudelijke zinnen
+        - Bouw voort op het gesprek met VERSE, relevante inhoud
+        - GEEN vragen stellen aan luisteraars (die komen later)
+        
+        Gesprek status: {len(self.conversation_history)} berichten uitgewisseld{recent_context}
+        
+        FOCUS: Deel specifieke informatie, voorbeelden of inzichten over {self.current_topic}
+        """
+        
+        enhanced_messages.append({"role": "system", "content": context_prompt})
+        return enhanced_messages
+
+    def _create_retry_prompt(self, messages: List[Dict], host: Dict) -> List[Dict]:
+        """Create alternative prompt approach for retry"""
+        retry_messages = [
+            {"role": "system", "content": f"""
+            Je bent {host['name']}, Nederlandse podcast host.
+            Onderwerp: {self.current_topic}
+            
+            Geef een korte, inhoudelijke reactie (2-3 zinnen) met:
+            - Specifieke informatie of voorbeelden
+            - GEEN clichés of algemene opmerkingen
+            - Nieuw perspektief op het onderwerp
+            """}
+        ]
+        
+        # Add last few messages for context
+        if len(self.conversation_history) > 0:
+            retry_messages.extend(self.conversation_history[-3:])
+            
+        return retry_messages
+
+    def _create_simple_prompt(self, host: Dict) -> List[Dict]:
+        """Create simple but specific prompt as final attempt"""
+        return [
+            {"role": "system", "content": f"""
+            Je bent {host['name']} in een Nederlandse podcast.
+            Geef één specifiek feit of voorbeeld over: {self.current_topic}
+            Maximaal 2 zinnen. GEEN algemene opmerkingen.
+            """},
+            {"role": "user", "content": f"Vertel iets specifieks over {self.current_topic}"}
+        ]
+
+    def _create_direct_statement_prompt(self, host: Dict) -> List[Dict]:
+        """Create very direct prompt for making a statement"""
+        host_style = "persoonlijk verhaal" if host['name'] == 'Emma' else "feit met cijfer"
+        return [
+            {"role": "system", "content": f"""
+            Je bent {host['name']}. Maak ÉÉN directe uitspraak over {self.current_topic}.
+            Gebruik {host_style}. Maximaal 2 zinnen. GEEN vragen.
+            Begin meteen met je punt.
+            """},
+            {"role": "user", "content": "Maak een korte, directe opmerking."}
+        ]
+
+    def _generate_topic_question(self, host: Dict) -> str:
+        """Generate a varied, context-aware question as last resort"""
+        topic = self.current_topic.lower()
+        conversation_length = len(self.conversation_history)
+        
+        # Track recently used questions to avoid repetition
+        if not hasattr(self, '_recent_questions'):
+            self._recent_questions = []
+        
+        # Topic-specific questions for Emma (enthusiastic, personal)
+        if host['name'] == 'Emma':
+            if 'ai' in topic or 'kunstmatige intelligentie' in topic:
+                questions = [
+                    "Ik ben zo benieuwd - gebruiken jullie zelf al AI-tools in jullie werk of studie?",
+                    "Mijn neef werkt bij een tech-bedrijf en vertelde laatst over AI in Nederland. Hebben jullie daar ervaring mee?",
+                    "Wat vinden jullie het spannendste aan AI-ontwikkelingen? Ik kan er uren over praten!",
+                    "Hoe denken jullie dat AI ons dagelijks leven gaat veranderen de komende jaren?"
+                ]
+            elif 'leren' in topic or 'onderwijs' in topic or 'taal' in topic:
+                questions = [
+                    "Wat is jullie geheime truc voor het leren van nieuwe vaardigheden? Ik leer zelf het beste door te doen!",
+                    "Hebben jullie weleens geprobeerd om met AI te leren? Ik ben zo nieuwsgierig naar jullie ervaringen!",
+                    "Mijn vriendin gebruikt zo'n slimme leer-app en ze is er helemaal weg van. Kennen jullie dat ook?",
+                    "Wat motiveeert jullie het meest om nieuwe dingen te blijven leren?"
+                ]
+            else:
+                questions = [
+                    f"Wat is jullie eerste indruk van {self.current_topic}? Ik ben echt nieuwsgierig!",
+                    f"Hebben jullie al ervaring met {self.current_topic}? Vertel eens jullie verhaal!",
+                    f"Wat zou {self.current_topic} kunnen betekenen voor onze toekomst, denken jullie?"
+                ]
+        
+        # Topic-specific questions for Daan (analytical, factual)
+        else:  # Daan
+            if 'ai' in topic or 'kunstmatige intelligentie' in topic:
+                questions = [
+                    "Interessant om te zien dat Nederland op Europees niveau voorloopt in AI-adoptie. Hoe ervaren jullie dat?",
+                    "Volgens recent onderzoek groeit de AI-markt in Nederland met 15% per jaar. Wat zijn jullie gedachten hierover?",
+                    "De Nederlandse overheid investeert flink in AI-ethiek en regelgeving. Hoe belangrijk vinden jullie dat?",
+                    "Welke sectoren in Nederland profiteren volgens jullie het meest van AI-technologie?"
+                ]
+            elif 'leren' in topic or 'onderwijs' in topic or 'taal' in topic:
+                questions = [
+                    "Nederlandse universiteiten doen baanbrekend onderzoek naar digitaal leren. Wat vinden jullie daarvan?",
+                    "Uit cijfers blijkt dat interactief leren 40% effectiever is. Herkennen jullie dat?",
+                    "Het Nederlandse onderwijssysteem omarmt steeds meer technologie. Hoe kijken jullie daartegen aan?",
+                    "Welke leertrends zien jullie opkomen in Nederland de laatste tijd?"
+                ]
+            else:
+                questions = [
+                    f"Welke Nederlandse ontwikkelingen rond {self.current_topic} vallen jullie op?",
+                    f"Hoe positioneert Nederland zich internationaal op het gebied van {self.current_topic}?",
+                    f"Wat zijn volgens jullie de belangrijkste trends rond {self.current_topic}?"
+                ]
+        
+        # Filter out recently used questions
+        available_questions = [q for q in questions if q not in self._recent_questions]
+        if not available_questions:
+            # If all questions were used recently, reset and use all
+            self._recent_questions = []
+            available_questions = questions
+        
+        # Select a question and add to recent list
+        import random
+        selected_question = random.choice(available_questions)
+        self._recent_questions.append(selected_question)
+        
+        # Keep only last 3 questions to prevent long-term repetition
+        if len(self._recent_questions) > 3:
+            self._recent_questions = self._recent_questions[-3:]
+            
+        return selected_question
+
+    def _is_recent_duplicate(self, response_text: str, speaker_name: str) -> bool:
+        """Check if response is too similar to recent messages from same speaker"""
+        # Check last 4 messages for duplicates from same speaker
+        recent_messages = self.conversation_history[-4:] if len(self.conversation_history) >= 4 else self.conversation_history
+        
+        for msg in recent_messages:
+            if f"{speaker_name}:" in msg.get('content', ''):
+                # Extract just the response part
+                prev_response = msg['content'].split(':', 1)[1].strip() if ':' in msg['content'] else msg['content']
+                
+                # Simple similarity check
+                if len(response_text) > 20 and len(prev_response) > 20:
+                    # Check for exact matches or very similar starts
+                    if response_text == prev_response or response_text[:30] == prev_response[:30]:
+                        return True
+                        
+        return False
+
+    def _generate_alternative_response(self, host: Dict, original_response: str) -> str:
+        """Generate an alternative when duplicate is detected"""
+        alternatives = {
+            'Emma': [
+                f"Oh wacht, ik wilde nog iets anders zeggen over {self.current_topic}...",
+                f"Eigenlijk, wat ik net bedoelde over {self.current_topic} is...",
+                f"Laat me dat anders zeggen - {self.current_topic} is volgens mij..."
+            ],
+            'Daan': [
+                f"Om het anders te formuleren: {self.current_topic} toont interessante ontwikkelingen.",
+                f"Vanuit een ander perspectief bekeken, {self.current_topic} heeft verschillende aspecten.",
+                f"Als we het breder bekijken, {self.current_topic} raakt aan meerdere thema's."
+            ]
+        }
+        
+        return alternatives.get(host['name'], alternatives['Emma'])[0]
+
     async def _call_api(self, messages: List[Dict], model: str) -> Optional[str]:
         """Call HuggingFace API"""
         if not HF_TOKEN:
@@ -191,15 +392,15 @@ class DutchPodcastConversation:
         payload = {
             "model": model,
             "messages": messages,
-            "max_tokens": 100,  # Shorter responses for faster flow
-            "temperature": 0.7,  # Slightly less creative for more reliable responses
-            "top_p": 0.85
+            "max_tokens": 120,  # Allow slightly longer responses for better content
+            "temperature": 0.8,  # More creative for dynamic responses
+            "top_p": 0.9
         }
 
         headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=25.0) as client:
                 response = await client.post(HF_API_URL, json=payload, headers=headers)
 
                 if response.status_code == 200:

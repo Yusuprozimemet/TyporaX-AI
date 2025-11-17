@@ -77,23 +77,23 @@ function switchToPanel(panel) {
     const sidebarHeader = document.querySelector('.sidebar-header h3');
     const panelConfigs = {
         'profile': {
-            title: '<i class="fas fa-user-circle"></i> USER PROFILE',
+            title: '<i class="codicon codicon-person"></i> USER PROFILE',
             contentId: 'profile-content'
         },
         'lessons': {
-            title: '<i class="fas fa-book"></i> LESSON GENERATOR',
+            title: '<i class="codicon codicon-book"></i> LESSON GENERATOR',
             contentId: 'lessons-content'
         },
         'progress': {
-            title: '<i class="fas fa-chart-line"></i> PROGRESS',
+            title: '<i class="codicon codicon-graph-line"></i> PROGRESS',
             contentId: 'progress-content'
         },
         'resources': {
-            title: '<i class="fas fa-download"></i> RESOURCES',
+            title: '<i class="codicon codicon-cloud-download"></i> RESOURCES',
             contentId: 'resources-content'
         },
         'settings': {
-            title: '<i class="fas fa-cog"></i> SETTINGS',
+            title: '<i class="codicon codicon-settings-gear"></i> SETTINGS',
             contentId: 'settings-content'
         }
     };
@@ -223,8 +223,8 @@ function updateLanguageDisplay() {
 function setStatus(message, isError = false) {
     const statusMessage = document.getElementById('status_message');
     const icon = isError ?
-        '<i class="fas fa-exclamation-circle"></i>' :
-        '<i class="fas fa-circle"></i>';
+        '<i class="codicon codicon-error"></i>' :
+        '<i class="codicon codicon-circle-filled"></i>';
     statusMessage.innerHTML = `${icon} ${message}`;
 }
 
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Disable button and show loading
             generateLessonBtn.disabled = true;
-            generateLessonBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            generateLessonBtn.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i> Generating...';
             setStatus('Generating today\'s lesson...');
 
             try {
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 // Re-enable button
                 generateLessonBtn.disabled = false;
-                generateLessonBtn.innerHTML = '<i class="fas fa-graduation-cap"></i> Generate Today\'s Lesson';
+                generateLessonBtn.innerHTML = '<i class="codicon codicon-mortar-board"></i> Generate Today\'s Lesson';
             }
         });
     }
@@ -459,7 +459,7 @@ function updateResourcesTab(userId) {
         pdfOutput.innerHTML = `
             <div class="resource-item">
                 <button class="btn btn-download" onclick="downloadResource('pdf', '${userId}')">
-                    <i class="fas fa-file-pdf"></i> Download PDF Report
+                    <i class="codicon codicon-file-pdf"></i> Download PDF Report
                 </button>
                 <p class="resource-desc">Complete learning analysis and personalized plan</p>
             </div>
@@ -472,7 +472,7 @@ function updateResourcesTab(userId) {
         ankiOutput.innerHTML = `
             <div class="resource-item">
                 <button class="btn btn-download" onclick="downloadResource('anki', '${userId}')">
-                    <i class="fas fa-clone"></i> Download Anki Deck CSV
+                    <i class="codicon codicon-library"></i> Download Anki Deck CSV
                 </button>
                 <p class="resource-desc">Flashcard deck for spaced repetition learning</p>
             </div>
@@ -485,10 +485,10 @@ function updateResourcesTab(userId) {
         audioOutput.innerHTML = `
             <div class="resource-item">
                 <button class="btn btn-download" onclick="downloadResource('audio', '${userId}')">
-                    <i class="fas fa-download"></i> Download Audio Guide
+                    <i class="codicon codicon-cloud-download"></i> Download Audio Guide
                 </button>
                 <button class="btn btn-play" onclick="playAudioGuide('${userId}')">
-                    <i class="fas fa-play"></i> Play Audio Guide
+                    <i class="codicon codicon-play"></i> Play Audio Guide
                 </button>
                 <p class="resource-desc">Pronunciation guide for your vocabulary</p>
                 <audio id="audioPlayer" controls style="display: none; width: 100%; margin-top: 10px;">
@@ -807,7 +807,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onstart = () => {
         isRecording = true;
         voiceButton.classList.add('recording');
-        voiceButton.innerHTML = '<i class="fas fa-stop"></i>';
+        voiceButton.innerHTML = '<i class="codicon codicon-debug-stop"></i>';
     };
 
     recognition.onresult = (event) => {
@@ -819,14 +819,14 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => {
         isRecording = false;
         voiceButton.classList.remove('recording');
-        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+        voiceButton.innerHTML = '<i class="codicon codicon-mic"></i>';
     };
 
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         isRecording = false;
         voiceButton.classList.remove('recording');
-        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+        voiceButton.innerHTML = '<i class="codicon codicon-mic"></i>';
     };
 } else {
     // Hide voice button if speech recognition is not supported
@@ -907,7 +907,7 @@ function addMessage(content, isUser = false, speakText = false) {
 
     messageDiv.innerHTML = `
         <div class="message-avatar">
-            <i class="fas ${isUser ? 'fa-user' : getExpertIcon()}"></i>
+            <i class="codicon ${isUser ? 'codicon-person' : getExpertIcon()}"></i>
         </div>
         <div class="message-content">
             <div class="message-text">${content}</div>
@@ -915,7 +915,7 @@ function addMessage(content, isUser = false, speakText = false) {
             ${!isUser && speakText ? `
                 <div class="message-actions">
                     <button class="btn-message-action" onclick="speakMessage('${content.replace(/'/g, '\\\\').replace(/"/g, '&quot;')}')" title="Listen to response (High Quality)">
-                        <i class="fas fa-volume-up"></i>
+                        <i class="codicon codicon-unmute"></i>
                     </button>
                 </div>
             ` : ''}
@@ -933,12 +933,12 @@ function addMessage(content, isUser = false, speakText = false) {
 
 function getExpertIcon() {
     const icons = {
-        healthcare: 'fa-user-md',
-        interview: 'fa-user-tie',
-        language: 'fa-graduation-cap',
-        podcast: 'fa-podcast'
+        healthcare: 'codicon-pulse',
+        interview: 'codicon-briefcase',
+        language: 'codicon-mortar-board',
+        podcast: 'codicon-broadcast'
     };
-    return icons[currentExpert] || 'fa-robot';
+    return icons[currentExpert] || 'codicon-robot';
 }
 
 function addWelcomeMessage() {
@@ -966,7 +966,7 @@ function addTypingIndicator() {
 
     typingDiv.innerHTML = `
         <div class="message-avatar">
-            <i class="fas ${getExpertIcon()}"></i>
+            <i class="codicon ${getExpertIcon()}"></i>
         </div>
         <div class="typing-indicator">
             <div class="typing-dots">
@@ -1173,8 +1173,8 @@ async function speakMessage(text) {
                 // Add loading state
                 const speakButtons = document.querySelectorAll('.btn-message-action');
                 speakButtons.forEach(btn => {
-                    if (btn.innerHTML.includes('fa-volume-up')) {
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    if (btn.innerHTML.includes('codicon-unmute')) {
+                        btn.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i>';
                         btn.disabled = true;
                     }
                 });
@@ -1188,8 +1188,8 @@ async function speakMessage(text) {
                         // Reset buttons when audio finishes
                         audio.onended = () => {
                             speakButtons.forEach(btn => {
-                                if (btn.innerHTML.includes('fa-spinner')) {
-                                    btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                if (btn.innerHTML.includes('codicon-loading')) {
+                                    btn.innerHTML = '<i class="codicon codicon-unmute"></i>';
                                     btn.disabled = false;
                                 }
                             });
@@ -1200,19 +1200,19 @@ async function speakMessage(text) {
                             console.log('🔊 Audio requires user interaction, showing play button');
                             // Show a play button for user to click
                             speakButtons.forEach(btn => {
-                                if (btn.innerHTML.includes('fa-spinner')) {
-                                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                                if (btn.innerHTML.includes('codicon-loading')) {
+                                    btn.innerHTML = '<i class="codicon codicon-play"></i>';
                                     btn.disabled = false;
                                     btn.title = 'Click to play audio';
                                     btn.onclick = async () => {
                                         try {
                                             await audio.play();
-                                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                            btn.innerHTML = '<i class="codicon codicon-unmute"></i>';
                                             btn.title = 'Listen to response (High Quality)';
                                             btn.onclick = () => speakMessage(text);
                                         } catch (err) {
                                             console.error('Manual audio play failed:', err);
-                                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                                            btn.innerHTML = '<i class="codicon codicon-unmute"></i>';
                                             btn.title = 'Audio playback failed';
                                         }
                                     };
@@ -1228,8 +1228,8 @@ async function speakMessage(text) {
                 audio.onerror = () => {
                     console.error('Audio loading failed');
                     speakButtons.forEach(btn => {
-                        if (btn.innerHTML.includes('fa-spinner')) {
-                            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        if (btn.innerHTML.includes('codicon-loading')) {
+                            btn.innerHTML = '<i class="codicon codicon-unmute"></i>';
                             btn.disabled = false;
                         }
                     });
@@ -1658,12 +1658,12 @@ class AssessmentPanel {
             this.elements.performanceLevel.textContent = this.capitalize(level);
             // Color code the performance level
             const colors = {
-                'excellent': '#4CAF50',
-                'good': '#2196F3',
+                'excellent': 'var(--vscode-button-bg)',
+                'good': 'var(--vscode-accent)',
                 'developing': '#FF9800',
                 'beginner': '#F44336'
             };
-            this.elements.performanceLevel.style.color = colors[level] || '#007acc';
+            this.elements.performanceLevel.style.color = colors[level] || 'var(--vscode-accent)';
         }
 
         // Update language metrics
@@ -1942,22 +1942,22 @@ function addPodcastMessage(content, speaker, speakerKey, voice) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Different avatars for each host
-    const avatarIcon = speakerKey === 'host1' ? 'fa-female' : 'fa-male';
+    const avatarIcon = speakerKey === 'host1' ? 'codicon-person' : 'codicon-account';
     const avatarColor = speakerKey === 'host1' ? '#e74c3c' : '#3498db';
 
     messageDiv.innerHTML = `
         <div class="message-avatar" style="background-color: ${avatarColor}">
-            <i class="fas ${avatarIcon}"></i>
+            <i class="codicon ${avatarIcon}"></i>
         </div>
         <div class="message-content">
             <div class="message-text">${content}</div>
             <div class="message-time">${time}</div>
             <div class="message-actions">
                 <button class="btn-message-action" onclick="speakPodcastMessage('${content.replace(/'/g, '\\\\').replace(/"/g, '&quot;')}', '${voice}')" title="Listen to ${speaker}">
-                    <i class="fas fa-volume-up"></i>
+                    <i class="codicon codicon-unmute"></i>
                 </button>
                 <button class="btn-message-action" onclick="interruptPodcast()" title="Interrupt podcast">
-                    <i class="fas fa-hand-paper"></i>
+                    <i class="codicon codicon-debug-pause"></i>
                 </button>
             </div>
         </div>
