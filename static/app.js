@@ -1447,10 +1447,10 @@ class AssessmentPanel {
                 // Use fallback assessment if provided
                 const dataToDisplay = assessment.fallback_assessment || assessment;
                 console.log('📊 Using fallback assessment:', dataToDisplay);
-                
+
                 // Store the latest assessment data
                 this.latestAssessment = dataToDisplay;
-                
+
                 // Display immediately if panel is visible
                 if (this.isActive) {
                     this.displayAssessment(dataToDisplay);
@@ -1480,9 +1480,9 @@ class AssessmentPanel {
                     expert_tips: ['Ask questions to learn more']
                 }
             };
-            
+
             this.latestAssessment = fallbackData;
-            
+
             if (this.isActive) {
                 this.displayAssessment(fallbackData);
             }
