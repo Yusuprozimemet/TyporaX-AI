@@ -315,6 +315,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Theme switching: apply CSS variable sets for dark/light/auto and persist selection
+(function() {
+    const themeSelect = document.getElementById('theme_select');
+    if (!themeSelect) return;
+
+    const themes = {
+        dark: {
+            '--vscode-bg': '#1e1e1e',
+            '--vscode-sidebar-bg': '#1e1e1e',
+            '--vscode-editor-bg': '#1e1e1e',
+            '--vscode-activitybar-bg': '#1e1e1e',
+            '--vscode-statusbar-bg': '#007acc',
+            '--vscode-border': '#1e1e1e',
+            '--vscode-text': '#cccccc',
+            '--vscode-text-secondary': '#969696',
+            '--vscode-accent': '#007acc',
+            '--vscode-hover': '#2a2d2e',
+            '--vscode-active': '#37373d',
+            '--vscode-input-bg': '#3c3c3c',
+            '--vscode-button-bg': '#0e639c',
+            '--vscode-button-hover': '#1177bb'
+        },
+        light: {
+            '--vscode-bg': '#ffffff',
+            '--vscode-sidebar-bg': '#f3f3f3',
+            '--vscode-editor-bg': '#ffffff',
+            '--vscode-activitybar-bg': '#f3f3f3',
+            '--vscode-statusbar-bg': '#007acc',
+            '--vscode-border': '#e5e5e5',
+            '--vscode-text': '#333333',
+            '--vscode-text-secondary': '#666666',
+            '--vscode-accent': '#007acc',
+            '--vscode-hover': '#e5e5e5',
+            '--vscode-active': '#d6d6d6',
+            '--vscode-input-bg': '#ffffff',
+            '--vscode-button-bg': '#0e639c',
+            '--vscode-button-hover': '#1177bb'
+        }
+    };
+
+    function applyTheme(name) {
+        let resolved = name;
+        if (name === 'auto') {
+            resolved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        const vars = themes[resolved];
+        if (!vars) return;
+
+        Object.keys(vars).forEach(k => {
+            document.documentElement.style.setProperty(k, vars[k]);
+        });
+
+        // mark dataset for possible CSS hooks
+        document.documentElement.dataset.theme = resolved;
+    }
+
+    // load saved theme
+    const saved = localStorage.getItem('app_theme') || 'auto';
+    themeSelect.value = saved;
+    applyTheme(saved);
+
+    themeSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('app_theme', val);
+        applyTheme(val);
+    });
+
+    // react to system changes when in auto
+    if (window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        mq.addEventListener && mq.addEventListener('change', () => {
+            const current = localStorage.getItem('app_theme') || 'auto';
+            if (current === 'auto') applyTheme('auto');
+        });
+    }
+})();
+
 // DNA-related functions have been removed
 
 // Check for existing resources on page load

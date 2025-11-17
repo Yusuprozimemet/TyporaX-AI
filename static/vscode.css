@@ -1,11 +1,11 @@
 /* VS Code Dark Theme */
 :root {
     --vscode-bg: #1e1e1e;
-    --vscode-sidebar-bg: #252526;
+    --vscode-sidebar-bg: #1e1e1e;
     --vscode-editor-bg: #1e1e1e;
-    --vscode-activitybar-bg: #333333;
+    --vscode-activitybar-bg: #1e1e1e;
     --vscode-statusbar-bg: #007acc;
-    --vscode-border: #3e3e42;
+    --vscode-border: #1e1e1e;
     --vscode-text: #cccccc;
     --vscode-text-secondary: #969696;
     --vscode-accent: #007acc;
@@ -14,6 +14,38 @@
     --vscode-input-bg: #3c3c3c;
     --vscode-button-bg: #0e639c;
     --vscode-button-hover: #1177bb;
+}
+
+/* VS Code Light Theme */
+:root {
+    --vscode-bg: #ffffff;
+    /* Main background */
+    --vscode-sidebar-bg: #f3f3f3;
+    /* Sidebar background */
+    --vscode-editor-bg: #ffffff;
+    /* Editor background */
+    --vscode-activitybar-bg: #f3f3f3;
+    /* Activity bar background */
+    --vscode-statusbar-bg: #007acc;
+    /* Status bar background (blue accent) */
+    --vscode-border: #e5e5e5;
+    /* Border color */
+    --vscode-text: #333333;
+    /* Primary text color */
+    --vscode-text-secondary: #666666;
+    /* Secondary/muted text */
+    --vscode-accent: #007acc;
+    /* Accent color (links, highlights) */
+    --vscode-hover: #e5e5e5;
+    /* Hover background */
+    --vscode-active: #d6d6d6;
+    /* Active/focused item background */
+    --vscode-input-bg: #ffffff;
+    /* Input background */
+    --vscode-button-bg: #0e639c;
+    /* Button background */
+    --vscode-button-hover: #1177bb;
+    /* Button hover background */
 }
 
 * {
@@ -324,9 +356,11 @@ body {
 
 .editor-content {
     flex: 1;
-    overflow-y: auto;
-    padding: 24px;
+    overflow: hidden;
     background: var(--vscode-editor-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Critical for proper flex scrolling */
 }
 
 .editor-content::-webkit-scrollbar {
@@ -351,7 +385,10 @@ body {
 }
 
 .tab-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; /* Essential for flex scrolling */
     animation: fadeIn 0.3s;
 }
 
@@ -365,6 +402,12 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Add padding to non-chat tabs */
+.tab-content.active:not(#experts-content) {
+    padding: 24px;
+    overflow-y: auto;
 }
 
 .welcome-header {
@@ -1541,10 +1584,10 @@ a:hover {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 200px);
+    height: 100%;
     background: var(--vscode-editor-bg);
-    border-radius: 8px;
     overflow: hidden;
+    min-height: 0; /* Ensure proper flex behavior */
 }
 
 .chat-header {
@@ -1630,23 +1673,26 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-height: 0; /* Ensure flex item can shrink and create scrollable area */
 }
 
 .chat-messages::-webkit-scrollbar {
-    width: 8px;
+    width: 6px; /* Slightly thinner like VS Code */
 }
 
 .chat-messages::-webkit-scrollbar-track {
-    background: var(--vscode-editor-bg);
+    background: transparent; /* Hidden track like VS Code */
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
     background: var(--vscode-border);
-    border-radius: 10px;
+    border-radius: 3px;
+    opacity: 0.5;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--vscode-text-secondary);
+    opacity: 0.8;
 }
 
 .message {
@@ -1791,19 +1837,19 @@ a:hover {
 }
 
 .chat-input-container {
-    padding: 16px 20px;
-    background: var(--vscode-sidebar-bg);
+    padding: 12px 16px;
+    background: var(--vscode-editor-bg);
     border-top: 1px solid var(--vscode-border);
 }
 
 .chat-input-wrapper {
     display: flex;
     align-items: flex-end;
-    gap: 12px;
+    gap: 8px;
     background: var(--vscode-input-bg);
     border: 1px solid var(--vscode-border);
-    border-radius: 24px;
-    padding: 8px 16px;
+    border-radius: 4px;
+    padding: 6px 12px;
     transition: border-color 0.2s;
 }
 
