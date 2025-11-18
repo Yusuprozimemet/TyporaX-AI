@@ -51,6 +51,21 @@ async def load_profile(user_id: str):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@router.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_well_known():
+    """Respond to Chrome DevTools well-known appspecific request.
+
+    Chrome sometimes requests this file when DevTools are open (source maps
+    / appspecific settings). Return a minimal JSON to avoid 404 noise in logs.
+    """
+    payload = {
+        "name": "com.chrome.devtools",
+        "description": "DevTools app-specific config placeholder",
+        "version": "1"
+    }
+    return JSONResponse(payload)
+
+
 @router.post("/api/generate-lesson")
 async def generate_lesson(
     background_tasks: BackgroundTasks,
@@ -174,16 +189,25 @@ async def download_pdf(user_id: str):
     """Download PDF report for user"""
     logger.info(f"PDF download request for user: {user_id}")
     try:
-        pdf_path = os.path.join("data", "users", user_id,
-                                "TYPORAX_COMPREHENSIVE_REPORT.pdf")
-        if os.path.exists(pdf_path):
-            return FileResponse(
-                pdf_path,
-                media_type="application/pdf",
-                filename=f"TyporaX_Report_{user_id}.pdf"
-            )
-        else:
-            return JSONResponse({"error": "PDF not found"}, status_code=404)
+        # Support multiple possible filenames (legacy/name variations)
+        candidates = [
+            os.path.join("data", "users", user_id,
+                         "TYPORAX_COMPREHENSIVE_REPORT.pdf"),
+            os.path.join("data", "users", user_id,
+                         "GENELINGUA_COMPREHENSIVE_REPORT.pdf"),
+            os.path.join("data", "users", user_id, "GENELINGUA_Report.pdf"),
+        ]
+
+        for path in candidates:
+            if os.path.exists(path):
+                # Use a friendly download filename based on existing file
+                return FileResponse(
+                    path,
+                    media_type="application/pdf",
+                    filename=f"GeneLingua_Report_{user_id}.pdf"
+                )
+
+        return JSONResponse({"error": "PDF not found"}, status_code=404)
     except Exception as e:
         logger.error(f"Error downloading PDF for {user_id}: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -193,16 +217,22 @@ async def download_pdf(user_id: str):
 async def download_anki(user_id: str):
     """Download Anki CSV for user"""
     try:
-        anki_path = os.path.join(
-            "data", "users", user_id, "typorax_anki.csv")
-        if os.path.exists(anki_path):
-            return FileResponse(
-                anki_path,
-                media_type="text/csv",
-                filename=f"TyporaX_Anki_{user_id}.csv"
-            )
-        else:
-            return JSONResponse({"error": "Anki file not found"}, status_code=404)
+        # Accept multiple possible Anki filenames produced by different modules
+        candidates = [
+            os.path.join("data", "users", user_id, "typorax_anki.csv"),
+            os.path.join("data", "users", user_id, "genelingua_anki.csv"),
+            os.path.join("data", "users", user_id, "anki_deck.csv"),
+        ]
+
+        for path in candidates:
+            if os.path.exists(path):
+                return FileResponse(
+                    path,
+                    media_type="text/csv",
+                    filename=f"GeneLingua_Anki_{user_id}.csv"
+                )
+
+        return JSONResponse({"error": "Anki file not found"}, status_code=404)
     except Exception as e:
         logger.error(f"Error downloading Anki for {user_id}: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -3,17 +3,30 @@ import os
 import json
 import pandas as pd
 import logging
+import sys
+import io
 from datetime import datetime
 
-# Configure root logger (only once)
+# Ensure log directory exists
+os.makedirs("data", exist_ok=True)
+
+# Create handlers that are safe for Unicode on Windows consoles.
+# FileHandler: write UTF-8 encoded logs. StreamHandler: wrap stdout with
+# a TextIOWrapper forcing UTF-8 with replacement for unencodable chars.
+file_handler = logging.FileHandler("data/typorax.log", encoding="utf-8")
+try:
+    stream_wrapper = io.TextIOWrapper(
+        sys.stdout.buffer, encoding="utf-8", errors="replace")
+    stream_handler = logging.StreamHandler(stream_wrapper)
+except Exception:
+    # Fallback: use default StreamHandler if wrapper fails
+    stream_handler = logging.StreamHandler()
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[
-        logging.FileHandler("data/typorax.log"),
-        logging.StreamHandler()  # Also print to console
-    ]
+    handlers=[file_handler, stream_handler]
 )
 
 

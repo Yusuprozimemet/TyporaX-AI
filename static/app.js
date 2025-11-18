@@ -1490,12 +1490,7 @@ class AssessmentPanel {
             this.hide();
         });
 
-        // Toggle button in chat header
-        const toggleBtn = document.getElementById('toggleAssessment');
-        toggleBtn?.addEventListener('click', () => {
-            this.toggle();
-            toggleBtn.classList.toggle('active', this.isActive);
-        });
+        // Toggle assessment button removed — no-op
 
         // Minimize button
         const minimizeBtn = document.getElementById('minimizeBtn');
@@ -1728,9 +1723,7 @@ class AssessmentPanel {
         // Clear any existing data first
         this.clearAssessmentData();
 
-        // Update toggle button state
-        const toggleBtn = document.getElementById('toggleAssessment');
-        if (toggleBtn) toggleBtn.classList.add('active');
+        // Toggle assessment removed — no-op
 
         console.log('📊 Assessment panel opened at position:', {
             top: this.panel.style.top || 'default',
@@ -1746,9 +1739,7 @@ class AssessmentPanel {
         this.isActive = false;
         this.isMinimized = false;
 
-        // Update toggle button state
-        const toggleBtn = document.getElementById('toggleAssessment');
-        if (toggleBtn) toggleBtn.classList.remove('active');
+        // Toggle assessment removed — no-op
 
         console.log('📊 Assessment panel closed');
     }
@@ -2205,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             right: window.getComputedStyle(panel).right,
             top: window.getComputedStyle(panel).top
         } : 'NOT FOUND');
-        console.log('🔍 Toggle button element:', document.getElementById('toggleAssessment'));
+        // Toggle button removed; skipping debug log
         console.log('🔍 Test button element:', document.getElementById('testAssessment'));
 
         // Assessment panel is ready for real conversations

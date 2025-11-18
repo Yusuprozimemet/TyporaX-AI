@@ -493,20 +493,36 @@ body {
     text-align: center;
     margin-bottom: 32px;
     padding: 32px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: 1px solid var(--vscode-border);
     border-radius: 8px;
+    background-color: var(--vscode-editor-bg);
 }
 
 .welcome-header h1 {
     font-size: 32px;
     margin-bottom: 8px;
-    color: white;
+    color: var(--vscode-text);
 }
 
 .welcome-header p {
     font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--vscode-text-secondary);
 }
+
+/* Additional for light theme support */
+[data-theme="light"] .welcome-header {
+    background-color: var(--vscode-editor-bg);
+    border-color: var(--vscode-border);
+}
+
+[data-theme="light"] .welcome-header h1 {
+    color: var(--vscode-text);
+}
+
+[data-theme="light"] .welcome-header p {
+    color: var(--vscode-text-secondary);
+}
+
 
 .content-grid {
     display: grid;
@@ -1176,7 +1192,7 @@ body {
 .status-bar {
     height: 42px;
     background: var(--vscode-border);
-    color: white;
+    color: var(--vscode-text);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1201,7 +1217,7 @@ body {
 .status-btn {
     background: none;
     border: none;
-    color: white;
+    color: var(--vscode-text);
     cursor: pointer;
     padding: 4px 8px;
     margin-left: 12px;
@@ -1298,29 +1314,7 @@ body {
     border-color: var(--vscode-accent);
 }
 
-.btn-toggle-assessment {
-    background: var(--vscode-button-bg);
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-toggle-assessment:hover {
-    background: var(--vscode-button-hover);
-    transform: translateY(-1px);
-}
-
-.btn-toggle-assessment.active {
-    background: var(--vscode-accent);
-    box-shadow: 0 0 10px rgba(0, 122, 204, 0.3);
-}
+/* .btn-toggle-assessment removed: assessment toggle UI disabled */
 
 .chat-messages {
     flex: 1;
