@@ -219,3 +219,4 @@ This project is licensed under the Apache 2.0 License - see [LICENSE](LICENSE) f
 ---
 
 *TyporaX-AI v8 - Where personality meets AI to unlock your language learning potential*
+*TyporaX-AI v8 - Where personality meets AI to unlock your language learning potential*
