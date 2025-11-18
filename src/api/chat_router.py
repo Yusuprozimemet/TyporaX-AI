@@ -1,6 +1,7 @@
 """
 Chat API router for expert conversations
 """
+from config.settings import config
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -21,10 +22,11 @@ router = APIRouter()
 logger = get_logger("chat_router")
 
 # Configuration
-DEFAULT_MODEL = "google/gemma-2-9b-it"
-FALLBACK_MODEL = "deepseek-ai/DeepSeek-R1"
-HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
-HF_TOKEN = os.getenv("HF_TOKEN")
+
+DEFAULT_MODEL = config.DEFAULT_MODEL
+FALLBACK_MODEL = config.FALLBACK_MODEL
+HF_API_URL = config.HF_API_URL
+HF_TOKEN = config.HF_TOKEN
 
 
 class ChatMessage(BaseModel):

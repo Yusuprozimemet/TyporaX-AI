@@ -2,24 +2,23 @@
 Test assessment system directly
 """
 import asyncio
-import os
+from config.settings import config
 from src.services.assessment import RealTimeAssessment
 
 
 async def test_assessment():
     """Test the assessment system directly"""
 
-    hf_token = os.getenv("HF_TOKEN")
-    if not hf_token:
+    if not config.HF_TOKEN:
         print("❌ HF_TOKEN not found")
         return
 
-    print(f"✅ HF_TOKEN found: {hf_token[:10]}...")
+    print(f"✅ HF_TOKEN found: {config.HF_TOKEN[:10]}...")
 
     # Create assessment system
     assessment_system = RealTimeAssessment(
-        hf_token=hf_token,
-        api_url="https://router.huggingface.co/v1/chat/completions"
+        hf_token=config.HF_TOKEN,
+        api_url=config.HF_API_URL
     )
 
     # Test message with obvious grammar issues

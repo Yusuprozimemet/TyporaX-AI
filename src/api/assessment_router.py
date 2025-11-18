@@ -33,7 +33,9 @@ async def get_assessment(request: AssessmentRequest):
         from config.settings import config
         assessment_system = RealTimeAssessment(
             hf_token=config.HF_TOKEN or "dummy",
-            api_url=config.HF_API_URL
+            api_url=config.HF_API_URL,
+            default_model=config.DEFAULT_MODEL,
+            fallback_model=config.FALLBACK_MODEL
         )
 
         # Get comprehensive assessment

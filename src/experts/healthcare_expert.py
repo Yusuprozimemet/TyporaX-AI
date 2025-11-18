@@ -4,6 +4,7 @@
 # For foreign healthcare professionals preparing for BIG registration
 # ================================================
 
+from config.settings import config
 import re
 import os
 import json
@@ -14,9 +15,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # === CONFIG ===
-DEFAULT_MODEL = "google/gemma-2-9b-it"
-FALLBACK_MODEL = "deepseek-ai/DeepSeek-R1:together"
-HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
+
+DEFAULT_MODEL = config.DEFAULT_MODEL
+FALLBACK_MODEL = config.FALLBACK_MODEL
+HF_API_URL = config.HF_API_URL
 
 # === SCENARIOS ===
 HEALTHCARE_SCENARIOS = {
@@ -125,7 +127,7 @@ def generate_with_api(messages: List[Dict], max_tokens: int = 400, model: str = 
         }
 
         headers = {"Content-Type": "application/json"}
-        token = os.getenv("HF_TOKEN")
+        token = config.HF_TOKEN
         if token:
             headers["Authorization"] = f"Bearer {token}"
 

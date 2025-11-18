@@ -18,11 +18,12 @@ logger = get_logger(__name__)
 class RealTimeAssessment:
     """Real-time assessment engine for expert conversations"""
 
-    def __init__(self, hf_token: str, api_url: str, default_model: str = "google/gemma-2-9b-it", fallback_model: str = "deepseek-ai/DeepSeek-R1:together"):
+    def __init__(self, hf_token: str, api_url: str, default_model: str = None, fallback_model: str = None):
+        from config.settings import config
         self.hf_token = hf_token
         self.api_url = api_url
-        self.default_model = default_model
-        self.fallback_model = fallback_model
+        self.default_model = default_model or config.DEFAULT_MODEL
+        self.fallback_model = fallback_model or config.FALLBACK_MODEL
         self.conversation_context = {}
 
     async def analyze_conversation(self, user_id: str, expert: str,
