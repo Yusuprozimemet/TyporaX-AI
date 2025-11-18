@@ -17,7 +17,7 @@ class Config:
     FALLBACK_MODEL: str = "mixtral-8x7b-instruct-v0.1"
     HF_API_URL: str = "https://api.groq.com/openai/v1/chat/completions"
     HF_TOKEN: Optional[str] = os.getenv("GROQ_API_KEY")
-    
+
     # API Configuration - HuggingFace (Commented out for now)
     # DEFAULT_MODEL: str = "google/gemma-2-9b-it"
     # FALLBACK_MODEL: str = "deepseek-ai/DeepSeek-R1"

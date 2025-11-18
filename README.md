@@ -2,20 +2,22 @@
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green.svg)](https://fastapi.tiangolo.com)
+[![Groq](https://img.shields.io/badge/Groq-Powered-orange.svg)](https://groq.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**TyporaX-AI** is a personalized Dutch language learning platform powered by AI expert coaches. Practice real-world conversations with specialized experts while receiving real-time assessment and feedback tailored to your personality type (MBTI).
+**TyporaX-AI** is a personalized Dutch language learning platform powered by lightning-fast Groq AI models. Practice with specialized expert coaches, enjoy immersive podcast conversations, and receive real-time assessment with desktop PWA experience.
 
 ---
 
 ## ✨ Features
 
-- 🤖 **AI Expert Coaches** - Healthcare Expert, IT Interview Coach, Language Tutor
+- 🎙️ **Dutch Podcast Expert** - Interactive Emma & Daan conversations with voice synthesis
+- 🤖 **AI Expert Coaches** - Healthcare Expert, IT Interview Coach, Language Tutor  
 - 📊 **Real-Time Assessment** - Live feedback on grammar, fluency, and vocabulary
+- 💻 **PWA Desktop App** - Install as native desktop application
 - 🎯 **Personality-Based Learning** - MBTI-optimized study methods
-- 📝 **Markdown Editor** - Write and practice with integrated tools
 - 🎴 **Anki Flashcards** - Auto-generated spaced repetition cards
-- 🔊 **Audio Pronunciation** - Natural Dutch speech synthesis
+- 🔊 **Audio Pronunciation** - Natural Dutch speech synthesis (Edge-TTS)
 - 📈 **Progress Tracking** - Monitor your learning journey
 
 ---
@@ -30,21 +32,24 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/Yusuprozimemet/TyporaX-AI.git
-cd TyporaX-AI
+git clone https://github.com/Yusuprozimemet/GeneLingua.git
+cd GeneLingua
 
 # Create environment
-conda create -n typorax python=3.13
-conda activate typorax
+conda create -n geneenv python=3.13
+conda activate geneenv
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Setup API key (get free key from groq.com)
+echo "GROQ_API_KEY=your_groq_api_key" > .env
 
 # Launch application
 python main.py
 ```
 
-**Access:** Open browser to `http://localhost:8000`
+**Access:** Open browser to `http://localhost:8000` → **Install as PWA for desktop experience**
 
 ---
 
@@ -70,6 +75,7 @@ TyporaX-AI/
 │   │   ├── anki.py            # Flashcard export
 │   │   └── pdf.py             # Report generation
 │   └── experts/               # Expert personalities
+│       ├── dutch_podcast_expert.py
 │       ├── healthcare_expert.py
 │       └── it_backend_interviewer.py
 └── data/users/{user_id}/      # User profiles & progress
@@ -79,21 +85,25 @@ TyporaX-AI/
 
 ## 🎯 How It Works
 
-### 1. **Expert Chat**
+### 1. **Dutch Podcast Experience**
+Interactive Emma & Daan conversations → Real-time voice synthesis → Immersive listening practice
+
+### 2. **Expert Chat**
 Choose an expert → Practice Dutch conversation → Get AI responses tailored to domain
 
-### 2. **Real-Time Assessment**
+### 3. **Real-Time Assessment**
 Every message analyzed for:
 - **Grammar & Fluency** (0-10 scores)
-- **Vocabulary Level** (Beginner → Advanced)
+- **Vocabulary Level** (Beginner → Advanced)  
+- **Better Version** (Corrected sentences)
 - **Live Hints** (Language tips, conversation tips, expert-specific guidance)
 
-### 3. **Personalized Learning**
-- **MBTI-Based Methods**: Immersion vs. Structured approach
-- **Daily Lessons**: Vocabulary from your activities
-- **Progress Tracking**: Realistic timeline predictions
+### 4. **Desktop PWA**
+- **Install as App**: Native desktop experience
+- **Draggable Panels**: Customizable assessment interface
+- **Offline Ready**: Works without internet connection
 
-### 4. **Export Resources**
+### 5. **Export Resources**
 - 📄 PDF learning plans
 - 🎴 Anki flashcard decks
 - 🔊 Audio pronunciation files
@@ -104,7 +114,10 @@ Every message analyzed for:
 
 ### Environment Setup
 ```bash
-# Optional: Configure API tokens
+# Required: Groq API key (free at groq.com)
+export GROQ_API_KEY="your_groq_api_key"
+
+# Optional: Backup HuggingFace token
 export HF_TOKEN="your_huggingface_token"
 
 # Optional: Custom data directory
@@ -113,8 +126,10 @@ export TYPORAX_DATA_DIR="/custom/path"
 
 ### Expert Customization
 Edit prompts in `prompts/` directory:
+- `dutch_podcast_expert.json` - Podcast conversations
 - `healthcare_expert.json` - Medical scenarios
 - `it_backend_interviewer.json` - Tech interviews
+- `assessment.json` - Language analysis
 - `app.json` - General language coaching
 
 ---
@@ -203,5 +218,4 @@ This project is licensed under the Apache 2.0 License - see [LICENSE](LICENSE) f
 
 ---
 
-*TyporaX-AI v8 - Where personality meets AI to unlock your language learning potential*
 *TyporaX-AI v8 - Where personality meets AI to unlock your language learning potential*

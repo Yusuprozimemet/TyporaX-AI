@@ -168,7 +168,8 @@ class DutchPodcastConversation:
 
             # Clean response to remove duplicate name prefixes
             if response_text:
-                response_text = self._clean_response_text(response_text, host['name'])
+                response_text = self._clean_response_text(
+                    response_text, host['name'])
 
             # Check for recent duplicate responses
             if self._is_recent_duplicate(response_text, host['name']):
@@ -363,22 +364,22 @@ class DutchPodcastConversation:
         """Clean response text to remove duplicate name prefixes"""
         if not response_text:
             return response_text
-            
+
         # Remove speaker name if it appears at the start of the response
         # This handles cases like "Emma: Some text" -> "Some text"
         clean_text = response_text.strip()
-        
+
         # Check for exact name match at start
         if clean_text.startswith(f"{speaker_name}:"):
             clean_text = clean_text[len(f"{speaker_name}:"):].strip()
-        
+
         # Check for name in bold format (sometimes AI adds this)
         if clean_text.startswith(f"**{speaker_name}**:"):
             clean_text = clean_text[len(f"**{speaker_name}**:"):].strip()
-            
+
         # Remove any remaining leading asterisks or colons
         clean_text = clean_text.lstrip("*: ").strip()
-        
+
         return clean_text
 
     def _is_recent_duplicate(self, response_text: str, speaker_name: str) -> bool:
