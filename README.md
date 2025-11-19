@@ -4,8 +4,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green.svg)](https://fastapi.tiangolo.com)
 [![Groq](https://img.shields.io/badge/Groq-Powered-orange.svg)](https://groq.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **TyporaX-AI** is a personalized Dutch language learning platform powered by lightning-fast Groq AI models. Practice with specialized expert coaches, enjoy immersive podcast conversations, and receive real-time assessment with desktop PWA experience.
+
+> 🌟 **We're an open-source project and we welcome contributors!** Whether you're fixing a typo or adding a new feature, your contributions help make language learning accessible to everyone. [See how to contribute →](#-contributing)
 
 ---
 
@@ -32,12 +35,12 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/Yusuprozimemet/GeneLingua.git
-cd GeneLingua
+git clone https://github.com/Yusuprozimemet/TyporaX-AI.git
+cd TyporaX-AI
 
 # Create environment
-conda create -n geneenv python=3.13
-conda activate geneenv
+conda create -n env python=3.13
+conda activate env
 
 # Install dependencies
 pip install -r requirements.txt
@@ -190,23 +193,151 @@ export CUDA_VISIBLE_DEVICES=""
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/NewFeature`
-3. Commit changes: `git commit -m 'Add NewFeature'`
-4. Push to branch: `git push origin feature/NewFeature`
-5. Open Pull Request
+**We welcome contributions from everyone!** 🎉 Whether you're a developer, language expert, designer, or just passionate about education technology, there's a place for you here.
 
-**Areas for contribution:**
-- Additional language support
-- New expert personalities
-- UI/UX improvements
-- Performance optimization
+### 🌟 Why Contribute?
+
+- 🚀 Help make language learning accessible to everyone
+- 💡 Share your expertise and ideas
+- 🌍 Join a community of developers and educators
+- 📚 Learn FastAPI, AI integration, and modern web development
+- ✨ See your code make a real impact
+
+### 🎯 How to Contribute
+
+#### For First-Time Contributors
+
+1. **Fork the repository** - Click the "Fork" button at the top right
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/TyporaX-AI.git
+   cd TyporaX-AI
+   ```
+3. **Set up development environment**
+   ```bash
+   conda create -n env python=3.13
+   conda activate env
+   pip install -r requirements.txt
+   ```
+4. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+5. **Make your changes** - Write code, fix bugs, improve docs
+6. **Test your changes**
+   ```bash
+   python main.py  # Test the application
+   ```
+7. **Commit with clear messages**
+   ```bash
+   git add .
+   git commit -m "Add: Brief description of your change"
+   ```
+8. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+9. **Open a Pull Request** - Go to the original repository and click "New Pull Request"
+
+#### Contribution Ideas
+
+**🐛 Bug Fixes**
+- Fix reported issues in GitHub Issues
+- Improve error handling
+- Fix typos or broken links
+
+**✨ New Features**
+- Add support for new languages (French, Spanish, German, etc.)
+- Create new expert personalities (Business Coach, Travel Guide, etc.)
+- Implement new assessment metrics
+- Add gamification features (badges, streaks, etc.)
+
+**🎨 UI/UX Improvements**
+- Enhance the web interface design
+- Improve mobile responsiveness
+- Add dark mode support
+- Create better visualizations for progress tracking
+
+**📚 Documentation**
+- Improve README or other docs
+- Add code comments
+- Create tutorials or video guides
+- Translate documentation to other languages
+
+**🔧 Code Quality**
+- Refactor code for better performance
+- Add unit tests
+- Improve code organization
+- Optimize API endpoints
+
+**🌐 Localization**
+- Translate UI to other languages
+- Add language-specific learning content
+- Adapt cultural references
+
+### 📝 Contribution Guidelines
+
+- **Code Style**: Follow PEP 8 for Python code
+- **Commit Messages**: Use clear, descriptive commit messages (e.g., "Add: Spanish language support", "Fix: Audio playback issue")
+- **Testing**: Test your changes thoroughly before submitting
+- **Documentation**: Update docs if you change functionality
+- **Small PRs**: Keep pull requests focused on a single feature or fix
+
+### 🐛 Reporting Issues
+
+Found a bug? Have a suggestion? Please open an issue on GitHub:
+1. Check if the issue already exists
+2. Use a clear, descriptive title
+3. Provide detailed steps to reproduce (for bugs)
+4. Include your environment details (OS, Python version, etc.)
+
+### 💬 Getting Help
+
+- **Questions?** Open a discussion on GitHub Discussions
+- **Stuck?** Comment on the issue you're working on
+- **Ideas?** Share them in GitHub Issues with the "enhancement" label
+
+### 🎓 Learning Resources
+
+New to the technologies we use?
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Groq API Docs](https://console.groq.com/docs)
+- [Python Beginner's Guide](https://www.python.org/about/gettingstarted/)
+- [Git & GitHub Tutorial](https://docs.github.com/en/get-started)
+
+### 🏆 Recognition
+
+All contributors will be:
+- Listed in our Contributors section
+- Credited in release notes
+- Part of a growing open-source community
+
+**Thank you for helping make language learning better for everyone!** 💙
+
+---
+
+## 👥 Contributors
+
+We appreciate all contributions to this project! 🙏
+
+<!-- Contributors list will be automatically updated -->
+Want to see your name here? [Start contributing today!](#-contributing)
 
 ---
 
 ## 📜 License
 
 This project is licensed under the Apache 2.0 License - see [LICENSE](LICENSE) file.
+
+**This means you can:**
+- ✅ Use this software commercially
+- ✅ Modify and distribute
+- ✅ Use privately
+- ✅ Use patents (if any)
+
+**With the conditions:**
+- 📋 Include original license and copyright
+- 📝 State significant changes made
 
 ---
 
