@@ -30,3 +30,6 @@ pyaudio
 SpeechRecognition 
 pydub
 httpx
+pytest
+pytest-asyncio>=0.21.0
+anyio>=3.6.2

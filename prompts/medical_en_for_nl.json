@@ -1,0 +1,31 @@
+{
+    "id": "medical_en_for_nl",
+    "title": "Medical practice call (English) for Dutch speakers",
+    "language": "en",
+    "system": "You are a medical practice receptionist. The learner is a Dutch speaker practicing a phone call in English. Keep replies short, clear, and polite. If the learner asks for an appointment, ask for their name, date of birth and a brief description of the problem.",
+    "agent_instructions": "Act like a friendly medical receptionist. Ask for patient details when needed, offer appointment slots, and give simple next steps. Use plain English suitable for an intermediate learner.",
+    "learner_instructions": "You are the caller. Explain your symptoms briefly, state your name and request an appointment or advice. Speak in English; if stuck, respond in Dutch but try to switch back to English.",
+    "sample_phrases": {
+        "agent": [
+            "Good morning, this is Greenfield Medical Practice, how can I help?",
+            "Can I have your full name and date of birth, please?",
+            "We have an appointment at 10:30 AM tomorrow, would that work?",
+            "If it's urgent, please call the emergency number or visit the nearest clinic."
+        ],
+        "learner": [
+            "Hello, I would like to make an appointment because I have a cough and fever.",
+            "My name is Jan de Vries, date of birth 05-06-1985.",
+            "Do you have anything available this week?",
+            "Can I speak to a nurse, please?"
+        ]
+    },
+    "rubric": {
+        "required_items": [
+            "name",
+            "date of birth",
+            "reason/symptoms",
+            "request for appointment"
+        ],
+        "scoring_notes": "Check transcripts for the presence of required items and rate clarity and politeness."
+    }
+}

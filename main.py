@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from src.api.chat_router import router as chat_router
 from src.api.assessment_router import router as assessment_router
 from src.api.main_router import router as main_router
+from src.api.scenario_router import router as scenario_router
 
 # Initialize FastAPI
 app = FastAPI(
@@ -41,11 +42,12 @@ async def no_cache_static(request: Request, call_next):
 app.include_router(main_router, tags=["main"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(assessment_router, prefix="/api", tags=["assessment"])
+app.include_router(scenario_router, prefix="/api/scenario", tags=["scenario"])
 
 if __name__ == "__main__":
     import uvicorn
     # Debug: Print all routes
-    print("📋 Registered routes:")
+    print("[*] Registered routes:")
     for route in app.routes:
         if hasattr(route, 'path') and hasattr(route, 'methods'):
             print(f"  {route.methods} {route.path}")

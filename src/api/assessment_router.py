@@ -20,6 +20,7 @@ class AssessmentRequest(BaseModel):
     expert: str
     conversation_history: List[Dict[str, str]]
     current_message: str
+    language: str = "dutch"  # Language for assessment feedback
 
 
 @router.post("/assessment")
@@ -43,7 +44,8 @@ async def get_assessment(request: AssessmentRequest):
             user_id=request.user_id,
             expert=request.expert,
             conversation_history=request.conversation_history,
-            current_message=request.current_message
+            current_message=request.current_message,
+            language=request.language
         )
 
         # Save assessment data for analytics

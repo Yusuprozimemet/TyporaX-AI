@@ -293,6 +293,7 @@ const profileStatus = document.getElementById('profile_status');
 const ancestrySelect = document.getElementById('ancestry');
 const mbtiSelect = document.getElementById('mbti');
 const targetLanguageSelect = document.getElementById('target_language');
+const assessmentLanguageSelect = document.getElementById('assessment_language');
 const currentUserSpan = document.getElementById('current_user');
 const currentLanguageSpan = document.getElementById('current_language');
 
@@ -306,6 +307,12 @@ userIdInput.addEventListener('blur', async () => {
 
     try {
         const response = await fetch(`/load_profile?user_id=${encodeURIComponent(userId)}`);
+        if (!response.ok) {
+            // Profile doesn't exist yet - this is normal for new users
+            profileStatus.textContent = `New profile for ${userId}`;
+            currentUserSpan.textContent = userId;
+            return;
+        }
         const data = await response.json();
 
         if (data.profile) {
@@ -335,8 +342,17 @@ function updateLanguageDisplay() {
         'dutch': 'Dutch',
         'chinese': 'Chinese'
     };
-    currentLanguageSpan.textContent = langMap[targetLanguageSelect.value] || targetLanguageSelect.value;
+    // Only update if element exists (it may have been removed from HTML)
+    if (currentLanguageSpan) {
+        currentLanguageSpan.textContent = langMap[targetLanguageSelect.value] || targetLanguageSelect.value;
+    }
 }
+
+// Assessment language selection
+assessmentLanguageSelect.addEventListener('change', (e) => {
+    assessmentLanguage = e.target.value;
+    console.log(`Assessment language changed to: ${assessmentLanguage}`);
+});
 
 // Status message helper
 function setStatus(message, isError = false) {
@@ -915,6 +931,8 @@ let isRecording = false;
 let recognition = null;
 let currentExpert = 'healthcare';
 let conversationHistory = [];
+let scenarioSessionId = null; // session id for scenario-based experts
+let assessmentLanguage = 'dutch'; // language for assessment feedback
 
 // Initialize speech recognition if available
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -958,6 +976,42 @@ expertSelect.addEventListener('change', (e) => {
 
     // Reset conversation history when switching experts
     conversationHistory = [];
+
+    // Reset any scenario session id when switching experts
+    scenarioSessionId = null;
+
+    // If this is a scenario expert (medical or tax), auto-start a session
+    if (currentExpert && (currentExpert.startsWith('medical_') || currentExpert === 'tax_authority')) {
+        const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
+        // Start scenario session
+        (async () => {
+            try {
+                const form = new FormData();
+                form.append('user_id', userId);
+                form.append('scenario_id', currentExpert);
+
+                const resp = await fetch('/api/scenario/start', {
+                    method: 'POST',
+                    body: form
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.session) {
+                        scenarioSessionId = data.session.session_id;
+                        // Show agent's greeting from session
+                        if (data.session.last_agent) {
+                            addMessage(data.session.last_agent, false, true);
+                            conversationHistory.push({ role: 'assistant', content: data.session.last_agent });
+                        }
+                    }
+                } else {
+                    console.warn('Failed to start scenario session', resp.status);
+                }
+            } catch (err) {
+                console.error('Error starting scenario session:', err);
+            }
+        })();
+    }
 
     // Update assessment panel context
     const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
@@ -1055,16 +1109,26 @@ function getExpertIcon() {
         healthcare: 'codicon-pulse',
         interview: 'codicon-briefcase',
         language: 'codicon-mortar-board',
-        podcast: 'codicon-broadcast'
+        podcast: 'codicon-broadcast',
+        medical_en_for_nl: 'codicon-pulse',
+        medical_fr_for_nl: 'codicon-pulse',
+        medical_zh_for_nl: 'codicon-pulse',
+        tax_authority: 'codicon-organization'
     };
     return icons[currentExpert] || 'codicon-robot';
 }
 
 function addWelcomeMessage() {
     chatMessages.innerHTML = '';
+
+    // Skip welcome message for scenario experts; agent greeting is shown on session start
+    if (currentExpert && (currentExpert.startsWith('medical_') || currentExpert === 'tax_authority')) {
+        return;
+    }
+
     const welcomeMessages = {
         healthcare: "Hallo! Ik ben je Nederlandse zorgexpert. Ik help je graag met medische vragen terwijl we samen je Nederlands verbeteren. Waar kan ik je mee helpen?",
-        interview: "Hoi! Ik ben je Nederlandse IT-sollicitatiecoach. Ik help je graag met technische gesprekken in het Netherlands en IT-vocabulaire. Waar wil je aan werken?",
+        interview: "Hoi! Ik ben je Nederlandse IT-sollicitatiecoach. Ik help je graad met technische gesprekken in het Netherlands en IT-vocabulaire. Waar wil je aan werken?",
         language: "Welkom! Ik ben je Nederlandse taalcoach. Ik help je graag met grammatica, uitspraak, Nederlandse cultuur en natuurlijke gesprekken. Wat wil je vandaag leren?",
         podcast: "🎙️ Welkom bij de Nederlandse Podcast met Emma & Daan! Geef ons een onderwerp waar je over wilt praten en we beginnen meteen een interactief gesprek. Je kunt op elk moment onderbreken met vragen!"
     };
@@ -1129,24 +1193,45 @@ async function sendMessage() {
         // Get user ID from profile
         const userId = document.getElementById('user_id')?.value.trim() || 'anonymous';
 
-        // Send to backend
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                expert: currentExpert,
-                user_id: userId
-            })
-        });
+        // Send to backend - use scenario endpoints for scenario experts (medical or tax)
+        let data;
+        if (currentExpert && (currentExpert.startsWith('medical_') || currentExpert === 'tax_authority')) {
+            const form = new FormData();
+            form.append('user_id', userId);
+            form.append('scenario_id', currentExpert);
+            form.append('session_id', scenarioSessionId || '');
+            form.append('text_input', message);
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+            const response = await fetch('/api/scenario/submit', {
+                method: 'POST',
+                body: form
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            data = await response.json();
+        } else {
+            // Regular chat endpoint
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    expert: currentExpert,
+                    user_id: userId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            data = await response.json();
         }
-
-        const data = await response.json();
 
         // Remove typing indicator
         removeTypingIndicator();
@@ -1166,6 +1251,20 @@ async function sendMessage() {
                 }
             };
             waitAndStart();
+        } else if (currentExpert && (currentExpert.startsWith('medical_') || currentExpert === 'tax_authority')) {
+            // Scenario response
+            const agentReply = data.agent_reply || data.response || 'No reply from scenario.';
+            addMessage(agentReply, false, true);
+
+            // Update conversation history
+            conversationHistory.push({ role: 'assistant', content: agentReply });
+            if (conversationHistory.length > 20) {
+                conversationHistory = conversationHistory.slice(-20);
+            }
+
+            // Update assessment panel context and trigger assessment update
+            assessmentPanel.updateContext(userId, currentExpert, conversationHistory);
+            await assessmentPanel.updateAssessment(message);
         } else {
             // Regular expert response
             addMessage(data.response, false, true);
@@ -1837,7 +1936,8 @@ class AssessmentPanel {
                     user_id: this.currentUserId,
                     expert: this.currentExpert,
                     conversation_history: this.conversationHistory,
-                    current_message: currentMessage
+                    current_message: currentMessage,
+                    language: assessmentLanguage
                 })
             });
 

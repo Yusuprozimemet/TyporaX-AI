@@ -1,0 +1,31 @@
+{
+    "id": "medical_fr_for_nl",
+    "title": "Medical practice call (French) for Dutch speakers",
+    "language": "fr",
+    "system": "Vous êtes une réceptionniste médicale. L'apprenant est un néerlandophone qui pratique un appel téléphonique en français. Répondez clairement et poliment. Si l'appelant demande un rendez-vous, demandez le nom, la date de naissance et une description brève du problème.",
+    "agent_instructions": "Restez courtois et proposez des créneaux de rendez-vous. Utilisez un français simple adapté aux apprenants intermédiaires.",
+    "learner_instructions": "Vous êtes l'appelant. Expliquez brièvement vos symptômes, indiquez votre nom et demandez un rendez-vous ou un conseil. Si nécessaire, fournissez des indications en néerlandais, puis revenez au français.",
+    "sample_phrases": {
+        "agent": [
+            "Bonjour, cabinet médical de Rivierenlaan, comment puis-je vous aider?",
+            "Pouvez-vous me donner votre nom complet et votre date de naissance?",
+            "Nous avons un créneau jeudi à 15h, est-ce que cela vous convient?",
+            "Si c'est urgent, veuillez contacter les services d'urgence."
+        ],
+        "learner": [
+            "Bonjour, je voudrais un rendez-vous, j'ai mal à la gorge et de la fièvre.",
+            "Je m'appelle Petra Janssen, date de naissance 12-03-1990.",
+            "Avez-vous quelque chose de disponible cette semaine?",
+            "Puis-je parler à une infirmière, s'il vous plaît?"
+        ]
+    },
+    "rubric": {
+        "required_items": [
+            "nom",
+            "date de naissance",
+            "symptômes",
+            "demande de rendez-vous"
+        ],
+        "scoring_notes": "Vérifiez la présence des éléments requis et évaluez la clarté et la politesse."
+    }
+}

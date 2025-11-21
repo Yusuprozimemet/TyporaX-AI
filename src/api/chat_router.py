@@ -15,6 +15,7 @@ from datetime import datetime
 from src.experts.healthcare_expert import generate_patient_response as healthcare_response
 from src.experts.it_backend_interviewer import generate_interviewer_response as interview_response
 from src.experts.dutch_podcast_expert import generate_podcast_response, get_continuous_podcast_response
+from src.experts.tax_authority_expert import generate_tax_authority_response
 from src.utils.prompt_manager import get_prompt
 from src.utils.utils import get_logger
 
@@ -120,6 +121,7 @@ def generate_fallback_response(expert: str, message: str) -> str:
     fallbacks = {
         "healthcare": "Bedankt voor je vraag over gezondheid. Ik help je graag verder met je Nederlands in medische situaties. Kun je me meer vertellen over je situatie?",
         "interview": "Dank je voor je interesse in IT-sollicitatiegesprekken. Ik help je graag met je technische Nederlands. Welk aspect van solliciteren wil je oefenen?",
+        "tax_authority": "Bedankt voor je belastingvraag. Ik ben hier om je te helpen met je Nederlands in belastingsituaties. Wat is je belastingvraag?",
         "language": "Welkom bij onze Nederlandse taalles! Ik help je graag je Nederlands te verbeteren. Wat wil je vandaag leren?"
     }
     return fallbacks.get(expert, fallbacks["language"])
@@ -165,6 +167,21 @@ async def chat_endpoint(chat_data: ChatMessage):
 
         # Detect language for better processing
         detected_language = detect_message_language(message)
+
+        # Tax authority expert uses synchronous function
+        if expert == "tax_authority":
+            tax_response = generate_tax_authority_response(
+                scenario="tax_authority",
+                conversation_history=[],
+                user_input=message
+            )
+            response_text = tax_response.get(
+                "agent_response", tax_response) if isinstance(tax_response, dict) else tax_response
+
+            # Log the conversation
+            log_chat_interaction(user_id, expert, message, response_text)
+
+            return JSONResponse({"response": response_text})
 
         # Get expert prompts from configuration
         system_prompt = get_prompt('app', f'expert_prompts.{expert}') or get_prompt(

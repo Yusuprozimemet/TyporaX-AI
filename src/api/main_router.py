@@ -10,7 +10,6 @@ import json
 from datetime import datetime
 
 from src.services.calibrator import run_calibrator
-from src.services.tracker import run_tracker
 from src.services.lesson_bot import run_lesson_bot
 from src.utils.pdf import generate_pdf
 from src.utils.anki import export_anki

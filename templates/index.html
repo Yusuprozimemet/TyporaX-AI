@@ -21,6 +21,9 @@
     <!-- Styles -->
     <link rel="stylesheet" href="/static/vscode.css?v=1.1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@latest/dist/codicon.css" />
+
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 
 <body>
@@ -171,54 +174,81 @@
             </div>
 
             <div class="progress-item">
-                <div class="progress-label">Target Language:</div>
-                <div class="progress-value" id="current_language">Japanese</div>
+                <div class="progress-label">Total Sessions:</div>
+                <div class="progress-value" id="total_sessions">0</div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-label">Total Practice Time:</div>
+                <div class="progress-value" id="total_time">0 min</div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-label">Current Streak:</div>
+                <div class="progress-value" id="current_streak">0 days</div>
             </div>
 
             <div class="section-divider"></div>
 
             <div class="section-title">
-                <i class="codicon codicon-graph-line"></i> SESSION STATS
+                <i class="codicon codicon-graph-line"></i> PERFORMANCE CHARTS
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Messages Today</div>
+            <!-- Charts Container -->
+            <div id="charts-container" style="margin: 15px 0;">
+                <!-- Overall Score Trend Chart -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Overall Score Trend</h4>
+                    <canvas id="scoreChart" style="max-height: 200px;"></canvas>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Experts Talked</div>
+
+                <!-- Grammar vs Fluency Chart -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Grammar vs Fluency</h4>
+                    <canvas id="grammarFluencyChart" style="max-height: 200px;"></canvas>
+                </div>
+
+                <!-- Session Distribution Chart -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Messages per Session</h4>
+                    <canvas id="sessionChart" style="max-height: 200px;"></canvas>
+                </div>
+
+                <!-- Performance Level Distribution Pie Chart -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Performance Levels</h4>
+                    <canvas id="performanceChart" style="max-height: 200px;"></canvas>
+                </div>
+
+                <!-- Weekly Summary -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Weekly Summary</h4>
+                    <div id="weeklySummary" style="font-size: 12px; line-height: 1.6;">
+                        <p>Loading summary...</p>
+                    </div>
+                </div>
+
+                <!-- Error Patterns -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Common Error Patterns</h4>
+                    <div id="errorPatterns" style="font-size: 12px; line-height: 1.6;">
+                        <p>Loading error analysis...</p>
+                    </div>
+                </div>
+
+                <!-- Milestones -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 10px 0; font-size: 13px;">Achievements & Milestones</h4>
+                    <div id="milestones" style="font-size: 12px; line-height: 1.6;">
+                        <p>No milestones yet. Keep practicing!</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Progress Content (hidden by default) -->
-        <div class="sidebar-content" id="progress-content" style="display: none;">
-            <div class="section-title">
-                <i class="codicon codicon-trophy"></i> ACHIEVEMENTS
-            </div>
-
-            <div class="achievement-item">
-                <i class="codicon codicon-star-full"></i>
-                <div class="achievement-text">
-                    <div class="achievement-title">First Steps</div>
-                    <div class="achievement-desc">Started learning journey</div>
-                </div>
-            </div>
-
-            <div class="section-divider"></div>
-
-            <div class="section-title">
-                <i class="codicon codicon-calendar"></i> WEEKLY PROGRESS
-            </div>
-
-            <div class="progress-chart">
-                <div class="chart-placeholder">
-                    <i class="codicon codicon-graph"></i>
-                    <p>Start chatting to see progress</p>
-                </div>
-            </div>
+            <button id="refreshProgressBtn"
+                style="width: 100%; margin-top: 10px; padding: 8px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                <i class="codicon codicon-refresh"></i> Refresh Analytics
+            </button>
         </div>
 
         <!-- Resources Content (hidden by default) -->
@@ -309,6 +339,25 @@
             <div class="section-divider"></div>
 
             <div class="section-title">
+                <i class="codicon codicon-comment-discussion"></i> ASSESSMENT LANGUAGE
+            </div>
+
+            <div class="form-group">
+                <label for="assessment_language">
+                    <i class="codicon codicon-symbol-namespace"></i> Assessment Language
+                </label>
+                <select id="assessment_language">
+                    <option value="dutch" selected>🇳🇱 Dutch (Nederlands)</option>
+                    <option value="english">🇬🇧 English</option>
+                    <option value="french">🇫🇷 French (Français)</option>
+                    <option value="chinese">🇨🇳 Chinese (中文)</option>
+                </select>
+                <div class="hint">Language for assessment feedback and hints</div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-title">
                 <i class="codicon codicon-database"></i> DATA
             </div>
 
@@ -358,6 +407,10 @@
                                     <option value="interview">💻 Nederlandse IT Coach</option>
                                     <option value="language">🌍 Nederlandse Taalcoach</option>
                                     <option value="podcast">🎙️ Nederlandse Podcast (Emma & Daan)</option>
+                                    <option value="medical_en_for_nl">🩺 Medical call (English)</option>
+                                    <option value="medical_fr_for_nl">🩺 Medical call (Français)</option>
+                                    <option value="medical_zh_for_nl">🩺 Medical call (中文)</option>
+                                    <option value="tax_authority">🏛️ Belastingdienst (Nederlands)</option>
                                 </select>
                             </div>
 
@@ -669,6 +722,7 @@
     </div>
 
     <script src="/static/app.js"></script>
+    <script src="/static/plots.js"></script>
 </body>
 
 </html>
