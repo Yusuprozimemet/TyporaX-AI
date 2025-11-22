@@ -557,9 +557,11 @@ Houd het kort en praktisch."""
                 try:
                     with open(progress_file, "r", encoding="utf-8") as f:
                         content = f.read().strip()
-                        historical_data = json.loads(content) if content else {"sessions": [], "total_messages": 0, "improvement_trend": "stable"}
+                        historical_data = json.loads(content) if content else {
+                            "sessions": [], "total_messages": 0, "improvement_trend": "stable"}
                 except (json.JSONDecodeError, IOError):
-                    historical_data = {"sessions": [], "total_messages": 0, "improvement_trend": "stable"}
+                    historical_data = {
+                        "sessions": [], "total_messages": 0, "improvement_trend": "stable"}
             else:
                 historical_data = {
                     "sessions": [], "total_messages": 0, "improvement_trend": "stable"}

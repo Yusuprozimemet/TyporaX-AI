@@ -717,6 +717,51 @@ def generate_lesson_for_user(user_id: str, language: str = "dutch", expert: str 
                 assessments = json.loads(content) if content else []
         except (json.JSONDecodeError, IOError):
             assessments = []
+    # Deduplicate assessments (some flows write duplicates)
+    unique = []
+    seen = set()
+    for a in assessments:
+        try:
+            key = json.dumps(a, sort_keys=True)
+        except Exception:
+            key = str(a)
+        if key not in seen:
+            seen.add(key)
+            unique.append(a)
+    assessments = unique
+
+    # If the user practiced a lot, prefer the most recent assessments
+    # Heuristic: if there are many assessments or a high number of session messages,
+    # only use the latest N assessments so lesson generation reflects current performance.
+    try:
+        total_session_messages = sum(
+            int(a.get("learning_progress", {}).get("session_messages", 0)) for a in assessments
+        )
+    except Exception:
+        total_session_messages = 0
+
+    # Thresholds (tuneable): many assessments OR a lot of session messages
+    ASSESSMENT_COUNT_THRESHOLD = 8
+    SESSION_MESSAGES_THRESHOLD = 20
+    MAX_RECENT_ASSESSMENTS = 5
+
+    if len(assessments) >= ASSESSMENT_COUNT_THRESHOLD or total_session_messages >= SESSION_MESSAGES_THRESHOLD:
+        # Sort by timestamp and keep the most recent ones
+        try:
+            sorted_assessments = sorted(
+                assessments,
+                key=lambda x: datetime.fromisoformat(
+                    x.get("timestamp")) if x.get("timestamp") else datetime.min,
+                reverse=True,
+            )
+            assessments = sorted_assessments[:MAX_RECENT_ASSESSMENTS]
+            logger.info(
+                f"Using {len(assessments)} most recent assessments (user practiced a lot)")
+        except Exception:
+            # If timestamp parsing fails, fallback to using the last N entries
+            assessments = assessments[-MAX_RECENT_ASSESSMENTS:]
+            logger.info(
+                f"Using last {len(assessments)} assessments (fallback)")
 
     # Generate lesson
     lesson = generator.generate_lesson_plan(
