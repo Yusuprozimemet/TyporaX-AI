@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Generation Logs Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--vscode-editor-background, #1e1e1e);
+            color: var(--vscode-editor-foreground, #d4d4d4);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: var(--vscode-accent, #007acc);
+            font-size: 28px;
+        }
+
+        .search-section {
+            background: var(--vscode-sidebar-background, #252526);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            border: 1px solid var(--vscode-border, #3e3e42);
+        }
+
+        .search-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--vscode-input-background, #3c3c3c);
+            border: 1px solid var(--vscode-input-border, #555);
+            border-radius: 4px;
+            color: var(--vscode-input-foreground, #d4d4d4);
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--vscode-button-background, #007acc);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--vscode-button-hoverBackground, #005a9c);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: var(--vscode-notebookStatusSuccessIcon, rgba(76, 175, 80, 0.1));
+            border-left: 3px solid #4CAF50;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            color: #90ee90;
+        }
+
+        .error-box {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 3px solid #dc3545;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-border, #3e3e42);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--vscode-editor-foreground, #d4d4d4);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            border-bottom-color: var(--vscode-accent, #007acc);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--vscode-accent, #007acc);
+            color: var(--vscode-accent, #007acc);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .log-item {
+            background: var(--vscode-sidebar-background, #252526);
+            border: 1px solid var(--vscode-border, #3e3e42);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .log-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--vscode-border, #3e3e42);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            color: var(--vscode-editor-foreground-dim, #858585);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--vscode-accent, #007acc);
+        }
+
+        .analysis {
+            background: var(--vscode-input-background, #3c3c3c);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .analysis-item {
+            margin: 8px 0;
+            padding: 8px 0;
+        }
+
+        .analysis-label {
+            color: var(--vscode-editor-foreground-dim, #858585);
+            margin-bottom: 3px;
+        }
+
+        .analysis-content {
+            color: var(--vscode-editor-foreground, #d4d4d4);
+            padding-left: 10px;
+        }
+
+        .exercise-list {
+            margin: 15px 0;
+        }
+
+        .exercise {
+            background: var(--vscode-input-background, #3c3c3c);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--vscode-accent, #007acc);
+        }
+
+        .exercise-type {
+            display: inline-block;
+            background: var(--vscode-accent, #007acc);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--vscode-editor-foreground-dim, #858585);
+        }
+
+        .spinner {
+            border: 3px solid var(--vscode-border, #3e3e42);
+            border-top: 3px solid var(--vscode-accent, #007acc);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        pre {
+            background: var(--vscode-input-background, #3c3c3c);
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+
+        code {
+            color: #ce9178;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📊 Lesson Generation Logs Viewer</h1>
+
+        <div class="search-section">
+            <div class="search-group">
+                <input type="text" id="userId" placeholder="Enter User ID (e.g., tester, alex, yusup)" value="">
+                <button onclick="loadAllLogs()">Load All Logs</button>
+                <button onclick="loadLatestLog()">Load Latest</button>
+                <button onclick="loadImpactAnalysis()">Impact Analysis</button>
+            </div>
+            <small style="color: var(--vscode-editor-foreground-dim, #858585);">
+                💡 Enter a user ID and click a button to view lesson generation details
+            </small>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('all-logs')">All Logs</button>
+            <button class="tab" onclick="switchTab('latest-log')">Latest Log</button>
+            <button class="tab" onclick="switchTab('impact-analysis')">Impact Analysis</button>
+        </div>
+
+        <div id="all-logs" class="tab-content active"></div>
+        <div id="latest-log" class="tab-content"></div>
+        <div id="impact-analysis" class="tab-content"></div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const className = type === 'error' ? 'error-box' : 'info-box';
+            container.innerHTML = `<div class="${className}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+
+        async function loadAllLogs() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                showAlert('Please enter a user ID', 'error');
+                return;
+            }
+
+            switchTab('all-logs');
+            const container = document.getElementById('all-logs');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading logs...</div>';
+
+            try {
+                const response = await fetch(`/api/lesson-generation-logs/${userId}`);
+                const data = await response.json();
+
+                if (!data.logs || data.logs.length === 0) {
+                    container.innerHTML = `<div class="info-box">ℹ️ No logs found for user: ${userId}</div>`;
+                    return;
+                }
+
+                let html = `<div class="info-box">✓ Found ${data.total_lessons} lesson(s) generated for user <strong>${userId}</strong></div>`;
+
+                data.logs.forEach((log, idx) => {
+                    const timestamp = new Date(log.timestamp).toLocaleString();
+                    const lesson = log.lesson;
+                    const analysis = log.analysis;
+
+                    html += `
+                        <div class="log-item">
+                            <div class="log-header">
+                                <div class="stat">
+                                    <div class="stat-label">Lesson #</div>
+                                    <div class="stat-value">${idx + 1}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Generated</div>
+                                    <div class="stat-value" style="font-size: 12px;">${timestamp}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Difficulty</div>
+                                    <div class="stat-value">${analysis.difficulty_level || 'N/A'}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Grammar Score</div>
+                                    <div class="stat-value">${(analysis.avg_grammar_score || 0).toFixed(1)}/10</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <strong>📚 ${lesson.title}</strong>
+                                <p style="color: var(--vscode-editor-foreground-dim, #858585); margin-top: 5px; font-size: 13px;">${lesson.description}</p>
+                            </div>
+                            
+                            <div class="analysis">
+                                <div class="analysis-item">
+                                    <div class="analysis-label">🔍 Error Patterns Addressed:</div>
+                                    <div class="analysis-content">${JSON.stringify(analysis.error_patterns || [])}</div>
+                                </div>
+                                <div class="analysis-item">
+                                    <div class="analysis-label">🎯 Focus Areas:</div>
+                                    <div class="analysis-content">${JSON.stringify(analysis.focus_areas || [])}</div>
+                                </div>
+                                <div class="analysis-item">
+                                    <div class="analysis-label">📝 Grammar Issues:</div>
+                                    <div class="analysis-content">${JSON.stringify(analysis.grammar_issues || [])}</div>
+                                </div>
+                                <div class="analysis-item">
+                                    <div class="analysis-label">📚 Vocabulary Gaps:</div>
+                                    <div class="analysis-content">${JSON.stringify(analysis.vocabulary_gaps || [])}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="exercise-list">
+                                <strong>Exercises (${lesson.exercise_count}):</strong>
+                                ${lesson.exercises.map((ex, i) => `
+                                    <div class="exercise">
+                                        <span class="exercise-type">${ex.type}</span>
+                                        <strong>Ex ${i + 1}:</strong> ${ex.question}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                showAlert(`Error loading logs: ${error.message}`, 'error');
+                container.innerHTML = '';
+            }
+        }
+
+        async function loadLatestLog() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                showAlert('Please enter a user ID', 'error');
+                return;
+            }
+
+            switchTab('latest-log');
+            const container = document.getElementById('latest-log');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading latest log...</div>';
+
+            try {
+                const response = await fetch(`/api/lesson-generation-logs/latest/${userId}`);
+                const data = await response.json();
+
+                if (!data.latest_log) {
+                    container.innerHTML = `<div class="info-box">ℹ️ No logs found for user: ${userId}</div>`;
+                    return;
+                }
+
+                const log = data.latest_log;
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                const lesson = log.lesson;
+                const analysis = log.analysis;
+
+                let html = `
+                    <div class="info-box">✓ Latest lesson generation for user <strong>${userId}</strong> on ${timestamp}</div>
+                    
+                    <div class="log-item">
+                        <div class="log-header">
+                            <div class="stat">
+                                <div class="stat-label">Difficulty Level</div>
+                                <div class="stat-value">${analysis.difficulty_level || 'N/A'}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Grammar Score</div>
+                                <div class="stat-value">${(analysis.avg_grammar_score || 0).toFixed(1)}/10</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Assessments Used</div>
+                                <div class="stat-value">${analysis.error_patterns.length} errors</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Exercises</div>
+                                <div class="stat-value">${lesson.exercise_count}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 20px 0;">
+                            <h3 style="color: var(--vscode-accent, #007acc); margin-bottom: 10px;">📚 Lesson: ${lesson.title}</h3>
+                            <p style="color: var(--vscode-editor-foreground-dim, #858585);">${lesson.description}</p>
+                        </div>
+                        
+                        <div class="analysis">
+                            <h4 style="color: var(--vscode-accent, #007acc); margin-bottom: 10px;">Assessment Analysis Used for Generation:</h4>
+                            <div class="analysis-item">
+                                <div class="analysis-label">🔴 Error Patterns (Top 5):</div>
+                                <div class="analysis-content">${JSON.stringify(analysis.error_patterns.slice(0, 5), null, 2)}</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">🎯 Focus Areas (Addressed in Lesson):</div>
+                                <div class="analysis-content">${JSON.stringify(analysis.focus_areas, null, 2)}</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">📝 Grammar Issues:</div>
+                                <div class="analysis-content">${JSON.stringify(analysis.grammar_issues, null, 2)}</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">📚 Vocabulary Gaps:</div>
+                                <div class="analysis-content">${JSON.stringify(analysis.vocabulary_gaps, null, 2)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h4 style="color: var(--vscode-accent, #007acc); margin-bottom: 10px;">Generated Exercises:</h4>
+                            ${lesson.exercises.map((ex, i) => `
+                                <div class="exercise">
+                                    <span class="exercise-type">${ex.type}</span>
+                                    <strong>Exercise ${i + 1}:</strong>
+                                    <div style="margin-top: 5px; color: var(--vscode-editor-foreground, #d4d4d4);">
+                                        <strong>Q:</strong> ${ex.question}<br>
+                                        <strong>A:</strong> ${ex.correct_answer}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--vscode-border, #3e3e42);">
+                            <h4 style="color: var(--vscode-accent, #007acc); margin-bottom: 10px;">✓ Verification</h4>
+                            <div class="info-box">
+                                ✅ This lesson was generated based on ${analysis.error_patterns.length} error patterns from assessments.json<br>
+                                ✅ Difficulty adapted to: <strong>${analysis.difficulty_level}</strong><br>
+                                ✅ Grammar score used: <strong>${(analysis.avg_grammar_score || 0).toFixed(1)}/10</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            } catch (error) {
+                showAlert(`Error loading latest log: ${error.message}`, 'error');
+                container.innerHTML = '';
+            }
+        }
+
+        async function loadImpactAnalysis() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                showAlert('Please enter a user ID', 'error');
+                return;
+            }
+
+            switchTab('impact-analysis');
+            const container = document.getElementById('impact-analysis');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing impact...</div>';
+
+            try {
+                const response = await fetch(`/api/lesson-generation-impact/${userId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    container.innerHTML = `<div class="error-box">❌ ${data.error}</div>`;
+                    return;
+                }
+
+                if (data.total_lessons === 0) {
+                    container.innerHTML = `<div class="info-box">ℹ️ No lessons generated yet for user: ${userId}</div>`;
+                    return;
+                }
+
+                let html = `
+                    <div class="info-box">
+                        📊 Analysis: <strong>${data.total_lessons}</strong> lesson(s) generated for user <strong>${userId}</strong>
+                    </div>
+                `;
+
+                data.lessons.forEach((lesson, idx) => {
+                    const timestamp = new Date(lesson.timestamp).toLocaleString();
+                    html += `
+                        <div class="log-item">
+                            <div class="log-header">
+                                <div class="stat">
+                                    <div class="stat-label">Lesson</div>
+                                    <div class="stat-value">#${idx + 1}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Generated</div>
+                                    <div class="stat-value" style="font-size: 12px;">${timestamp}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Difficulty</div>
+                                    <div class="stat-value">${lesson.difficulty}</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Grammar</div>
+                                    <div class="stat-value">${(lesson.grammar_score || 0).toFixed(1)}/10</div>
+                                </div>
+                            </div>
+                            
+                            <div class="analysis">
+                                <div class="analysis-item">
+                                    <div class="analysis-label">🎯 Focus Areas Detected:</div>
+                                    <div class="analysis-content">${JSON.stringify(lesson.focus_areas)}</div>
+                                </div>
+                                <div class="analysis-item">
+                                    <div class="analysis-label">🔴 Top Errors Addressed:</div>
+                                    <div class="analysis-content">${JSON.stringify(lesson.error_patterns.slice(0, 3))}</div>
+                                </div>
+                                <div class="analysis-item">
+                                    <div class="analysis-label">📚 Exercise Mix:</div>
+                                    <div class="analysis-content">
+                                        ${Object.entries(lesson.exercise_types).map(([type, count]) => `${type}: ${count}`).join(', ')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                showAlert(`Error loading impact analysis: ${error.message}`, 'error');
+                container.innerHTML = '';
+            }
+        }
+
+        // Load latest log on page load if user ID is available
+        window.addEventListener('load', () => {
+            const userId = new URLSearchParams(window.location.search).get('user');
+            if (userId) {
+                document.getElementById('userId').value = userId;
+                loadLatestLog();
+            }
+        });
+    </script>
+</body>
+
+</html>

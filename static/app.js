@@ -373,7 +373,10 @@ document.addEventListener('DOMContentLoaded', () => {
         generateLessonBtn.addEventListener('click', async () => {
             const userId = userIdInput.value.trim() || 'unknown';
             const targetLanguage = targetLanguageSelect.value;
-            const logText = document.getElementById('log_text').value;
+            const logTextEl = document.getElementById('log_text');
+            // If the UI no longer provides a log_text input, send a safe default
+            const rawLog = logTextEl && typeof logTextEl.value === 'string' ? logTextEl.value.trim() : '';
+            const logText = rawLog.length ? rawLog : 'daily activities and language practice';
 
             // Disable button and show loading
             generateLessonBtn.disabled = true;
@@ -398,20 +401,112 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const result = await response.json();
+                console.log('Lesson generation response:', result);
+                console.log('Lesson structure:', result.lesson);
+                console.log('Exercises found:', result.lesson?.exercises?.length || 0);
 
-                // Update lesson content
-                if (result.words) {
-                    const wordsOutputEl = document.getElementById('words_output');
-                    if (wordsOutputEl) wordsOutputEl.innerHTML = formatList(result.words);
-                    const wordsDetailEl = document.getElementById('words_detail');
-                    if (wordsDetailEl) wordsDetailEl.innerHTML = formatList(result.words);
+                // Handle new lesson structure from lesson_generator.py
+                const lesson = result.lesson || {};
+                const exercises = lesson.exercises || [];
+
+                // Render interactive exercises directly in Today's Lesson tab
+                const exerciseAreaEl = document.getElementById('exercise-area');
+                if (exerciseAreaEl) {
+                    if (exercises.length === 0) {
+                        exerciseAreaEl.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--vscode-text-secondary);">No exercises were generated.</p>';
+                    } else {
+                        // Render a preview of exercises with answers
+                        let exerciseHTML = '<div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">';
+
+                        exercises.forEach((exercise, idx) => {
+                            const type = exercise.type || 'unknown';
+                            const question = exercise.question || exercise.correct_answer || '';
+                            const answer = exercise.correct_answer || '';
+                            const explanation = exercise.explanation || '';
+
+                            exerciseHTML += `
+                                <div style="border: 1px solid var(--vscode-border); border-radius: 6px; padding: 12px; background: var(--vscode-input-bg);">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; font-size: 13px;">Exercise ${idx + 1} (${type})</span>
+                                        ${exercise.audio_text ? `<button class="btn-icon" title="Listen" style="padding: 4px 8px; cursor: pointer;">🔊</button>` : ''}
+                                    </div>
+                                    <div style="margin-bottom: 8px;">
+                                        <strong>Question:</strong>
+                                        <p style="margin: 4px 0; color: var(--vscode-text);">${question}</p>
+                                    </div>
+                                    <div style="margin-bottom: 8px;">
+                                        <strong>Sample Answer:</strong>
+                                        <p style="margin: 4px 0; color: var(--vscode-accent); font-weight: 500;">${answer}</p>
+                                    </div>
+                                    ${explanation ? `
+                                    <div>
+                                        <strong>Explanation:</strong>
+                                        <p style="margin: 4px 0; color: var(--vscode-text-secondary); font-size: 12px;">${explanation}</p>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+
+                        exerciseHTML += '</div>';
+                        exerciseAreaEl.innerHTML = exerciseHTML;
+                    }
                 }
 
-                if (result.sentences) {
+                // Extract exercises by type (using actual field names from lesson_generator)
+                const vocabExercises = exercises.filter(e => ['vocabulary', 'typing', 'fill_blank', 'matching'].includes(e.type));
+                const sentenceExercises = exercises.filter(e => ['sentence', 'word_order', 'pronunciation'].includes(e.type));
+
+                // Update lesson content in main tab (using correct field names)
+                if (vocabExercises.length) {
+                    const vocabPrompts = vocabExercises.map(e => e.question || e.correct_answer || '').filter(Boolean);
+                    const wordsOutputEl = document.getElementById('words_output');
+                    if (wordsOutputEl) wordsOutputEl.innerHTML = formatList(vocabPrompts);
+                    const wordsDetailEl = document.getElementById('words_detail');
+                    if (wordsDetailEl) wordsDetailEl.innerHTML = formatList(vocabPrompts);
+                }
+
+                if (sentenceExercises.length) {
+                    const sentencePrompts = sentenceExercises.map(e => e.question || e.correct_answer || '').filter(Boolean);
                     const sentencesOutputEl = document.getElementById('sentences_output');
-                    if (sentencesOutputEl) sentencesOutputEl.innerHTML = formatList(result.sentences);
+                    if (sentencesOutputEl) sentencesOutputEl.innerHTML = formatList(sentencePrompts);
                     const sentencesDetailEl = document.getElementById('sentences_detail');
-                    if (sentencesDetailEl) sentencesDetailEl.innerHTML = formatList(result.sentences);
+                    if (sentencesDetailEl) sentencesDetailEl.innerHTML = formatList(sentencePrompts);
+                }
+
+                // Update lesson types area in the sidebar (non-interactive)
+                const typesContainer = document.getElementById('lesson_types');
+                if (typesContainer) {
+                    if (!exercises.length) {
+                        typesContainer.innerHTML = '<p class="output-text">No exercises were generated.</p>';
+                    } else {
+                        // Show generated types as plain text (no modal on sidebar)
+                        const labels = ['Practice Lesson'];
+                        typesContainer.innerHTML = labels.map(l => `<span class="output-text">${l}</span>`).join('<br>');
+                    }
+                }
+
+                // Add a Start Practice button inside Today's Lesson tab header so practice appears there
+                const practiceHeader = document.getElementById('practice-header');
+                if (practiceHeader) {
+                    const startBtn = document.createElement('button');
+                    startBtn.className = 'btn-action';
+                    startBtn.id = 'startPracticeBtn';
+                    startBtn.innerHTML = '<i class="codicon codicon-play"></i> Start Practice';
+                    // Remove any previous children
+                    practiceHeader.innerHTML = '';
+                    practiceHeader.appendChild(startBtn);
+                    startBtn.addEventListener('click', () => {
+                        const uid = document.getElementById('user_id')?.value?.trim() || userId || 'anonymous';
+                        if (window.startLessonPractice) {
+                            window.startLessonPractice(lesson, uid);
+                            // switch to the lesson tab
+                            const lessonTab = document.querySelector('.tab[data-tab="lesson"]');
+                            if (lessonTab) lessonTab.click();
+                        } else {
+                            console.error('startLessonPractice not available');
+                        }
+                    });
                 }
 
                 // Update Resources Tab
@@ -434,8 +529,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setStatus('Lesson generated successfully!');
 
-                // Switch to overview tab to show results
-                document.querySelector('.tab[data-tab="overview"]').click();
+                // Switch to Today's Lesson tab to show results
+                // Use the same tab key used by startLessonPractice (data-tab="lesson")
+                const todaysTab = document.querySelector('.tab[data-tab="lesson"]');
+                if (todaysTab) {
+                    todaysTab.click();
+                } else {
+                    // Fallback to overview if lesson tab isn't present
+                    const overviewTab = document.querySelector('.tab[data-tab="overview"]');
+                    if (overviewTab) overviewTab.click();
+                }
 
             } catch (error) {
                 console.error('Error:', error);

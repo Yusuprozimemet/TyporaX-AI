@@ -10,11 +10,12 @@ import json
 from datetime import datetime
 
 from src.services.calibrator import run_calibrator
-from src.services.lesson_bot import run_lesson_bot
+from src.services.lesson_generator import LessonGenerator
 from src.utils.pdf import generate_pdf
 from src.utils.anki import export_anki
 from src.utils.audio import generate_audio
 from src.utils.utils import ensure_dir, get_logger
+from src.utils.lesson_logger import LessonLogger
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -76,7 +77,12 @@ async def generate_lesson(
 ):
     """Generate lesson content based on daily activities"""
     try:
-        logger.info(f"Generating lesson for user: {user_id}")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"API ENDPOINT: /api/generate-lesson")
+        logger.info(f"  - User ID: {user_id}")
+        logger.info(f"  - Target Language: {target_language}")
+        logger.info(f"  - Ancestry: {ancestry}, MBTI: {mbti}")
+        logger.info(f"{'='*80}\n")
 
         user_dir = os.path.join("data", "users", user_id)
         ensure_dir(user_dir)
@@ -105,16 +111,43 @@ async def generate_lesson(
         # Using default percentile without DNA
         method = run_calibrator(50, mbti)
 
-        # Generate lesson content
-        lesson_result = run_lesson_bot(log_text, target_language)
-        words = lesson_result["words"]
-        sentences = lesson_result["sentences"]
+        # Generate lesson content using LessonGenerator
+        # If the client did not provide any `log_text`, fall back to a safe default
+        if not log_text or not log_text.strip():
+            log_text = "daily activities and language practice"
 
-        # Prepare results
+        generator = LessonGenerator()
+
+        # Load assessments for the user if available, otherwise use empty list
+        assessments_path = os.path.join(user_dir, "assessments.json")
+        assessments = []
+        if os.path.exists(assessments_path):
+            try:
+                with open(assessments_path, "r") as f:
+                    assessments = json.load(f)
+                    if not isinstance(assessments, list):
+                        assessments = [assessments] if isinstance(
+                            assessments, dict) else []
+                logger.info(
+                    f"✓ Loaded {len(assessments)} assessment(s) for user {user_id}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not load assessments for {user_id}: {e}")
+        else:
+            logger.warning(
+                f"No assessments.json found for user {user_id} at {assessments_path}")
+
+        lesson = generator.generate_lesson_plan(
+            user_id, target_language, "general", assessments)
+        lesson_path = generator.save_lesson(user_id, lesson)
+
+        logger.info(f"✓ Lesson saved to: {lesson_path}\n")
+
+        # Prepare results with full lesson structure
         results = {
             "method": method,
-            "words": words,
-            "sentences": sentences,
+            "lesson": lesson,
+            "lesson_path": lesson_path,
             "user_id": user_id
         }
 
@@ -124,7 +157,8 @@ async def generate_lesson(
         return JSONResponse(results)
 
     except Exception as e:
-        logger.error(f"Error generating lesson for {user_id}: {e}")
+        logger.error(
+            f"Error generating lesson for {user_id}: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -132,22 +166,19 @@ async def generate_lesson_outputs(user_id: str, results: dict):
     """Generate Anki deck and audio for lesson content"""
     try:
         user_dir = os.path.join("data", "users", user_id)
+        lesson = results.get("lesson", {})
+        exercises = lesson.get("exercises", [])
 
-        # Generate Anki deck
-        if "words" in results and "sentences" in results:
+        # Generate Anki deck from exercises (if any)
+        if exercises:
             lesson_data = {
-                "words": results["words"],
-                "sentences": results["sentences"]
+                "words": [e.get("prompt", "") for e in exercises if e.get("type") in ["vocabulary", "fill_blank"]],
+                "sentences": [e.get("prompt", "") for e in exercises if e.get("type") == "sentence"]
             }
-            anki_path = export_anki(lesson_data, user_id)
-            results["anki_path"] = convert_path_to_url(anki_path)
-            logger.info(f"Generated Anki: {anki_path}")
-
-        # Generate audio
-        if "sentences" in results:
-            audio_path = generate_audio(results["sentences"], user_id, "dutch")
-            results["audio_path"] = convert_path_to_url(audio_path)
-            logger.info(f"Generated Audio: {audio_path}")
+            if lesson_data["words"] or lesson_data["sentences"]:
+                anki_path = export_anki(lesson_data, user_id)
+                results["anki_path"] = convert_path_to_url(anki_path)
+                logger.info(f"Generated Anki: {anki_path}")
 
     except Exception as e:
         logger.error(f"Error generating lesson outputs for {user_id}: {e}")
@@ -252,4 +283,64 @@ async def download_audio(user_id: str):
             return JSONResponse({"error": "Audio file not found"}, status_code=404)
     except Exception as e:
         logger.error(f"Error downloading audio for {user_id}: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.get("/lesson-logs", response_class=HTMLResponse)
+async def lesson_logs_viewer(request: Request):
+    """Serve the lesson generation logs viewer"""
+    with open("static/lesson-logs-viewer.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+
+@router.get("/api/lesson-generation-logs/{user_id}")
+async def get_lesson_generation_logs(user_id: str):
+    """Get lesson generation logs for a user (shows how lessons were generated based on assessments)"""
+    try:
+        logs = LessonLogger.get_all_logs(user_id)
+        if not logs:
+            return JSONResponse({
+                "message": "No lesson generation logs found",
+                "user_id": user_id,
+                "logs": []
+            })
+
+        return JSONResponse({
+            "user_id": user_id,
+            "total_lessons": len(logs),
+            "logs": logs
+        })
+    except Exception as e:
+        logger.error(f"Error retrieving logs for {user_id}: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.get("/api/lesson-generation-logs/latest/{user_id}")
+async def get_latest_lesson_generation_log(user_id: str):
+    """Get the most recent lesson generation log for a user"""
+    try:
+        log = LessonLogger.get_latest_log(user_id)
+        if not log:
+            return JSONResponse({
+                "message": "No lesson generation logs found",
+                "user_id": user_id
+            })
+
+        return JSONResponse({
+            "user_id": user_id,
+            "latest_log": log
+        })
+    except Exception as e:
+        logger.error(f"Error retrieving latest log for {user_id}: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.get("/api/lesson-generation-impact/{user_id}")
+async def get_lesson_generation_impact(user_id: str):
+    """Analyze how assessments impacted lesson generation over time"""
+    try:
+        summary = LessonLogger.get_assessment_impact_summary(user_id)
+        return JSONResponse(summary)
+    except Exception as e:
+        logger.error(f"Error retrieving impact summary for {user_id}: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)

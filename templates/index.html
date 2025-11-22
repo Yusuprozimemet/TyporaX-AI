@@ -114,6 +114,16 @@
 
             <div class="section-divider"></div>
 
+            <!-- Language preference moved to Lesson Generator sidebar -->
+        </div>
+
+        <!-- Lesson Generator Content (hidden by default) -->
+        <div class="sidebar-content" id="lessons-content" style="display: none;">
+            <div class="section-title">
+                <i class="codicon codicon-book"></i> LESSON GENERATOR
+            </div>
+
+            <div class="section-divider"></div>
             <div class="section-title">
                 <i class="codicon codicon-symbol-namespace"></i> LANGUAGE PREFERENCE
             </div>
@@ -123,26 +133,20 @@
                     <i class="codicon codicon-symbol-namespace"></i> Target Language
                 </label>
                 <select id="target_language">
-                    <option value="japanese" selected>🇯🇵 Japanese (日本語)</option>
+                    <option value="japanese">🇯🇵 Japanese (日本語)</option>
                     <option value="dutch">🇳🇱 Dutch (Nederlands)</option>
                     <option value="chinese">🇨🇳 Chinese (中文)</option>
                 </select>
             </div>
-        </div>
-
-        <!-- Lesson Generator Content (hidden by default) -->
-        <div class="sidebar-content" id="lessons-content" style="display: none;">
-            <div class="section-title">
-                <i class="codicon codicon-book"></i> LESSON GENERATOR
-            </div>
 
             <div class="form-group">
-                <label for="log_text">
-                    <i class="codicon codicon-calendar"></i> Today's Activities
-                </label>
-                <textarea id="log_text" rows="3"
-                    placeholder="e.g., Had coffee with friends, watched anime...">Dutch languge, Learning, Method, Anki</textarea>
-                <div class="hint">What did you do today? (for context-based lessons)</div>
+                <div class="section-title" style="margin-bottom:6px;">
+                    <i class="codicon codicon-list-unordered"></i> Lesson Types
+                </div>
+                <div id="lesson_types" class="output-text">
+                    <p>No lesson generated yet. Click "Generate Today's Lesson" to create practice types.</p>
+                </div>
+                <div class="hint">Generated lesson types appear here after generation</div>
             </div>
 
             <div class="section-divider"></div>
@@ -473,16 +477,37 @@
             <!-- Lesson Tab -->
             <div class="tab-content" id="lesson-content">
                 <h2><i class="codicon codicon-book"></i> Today's Lesson</h2>
+
                 <div class="card">
-                    <h3><i class="codicon codicon-symbol-keyword"></i> Vocabulary List</h3>
-                    <div id="words_detail" class="output-text">
+                    <h3><i class="codicon codicon-lightbulb"></i> Today's Focus</h3>
+                    <div id="lesson-intro" class="output-text"
+                        style="padding: 12px; line-height: 1.8; color: var(--vscode-text);">
+                        Generate a lesson to see personalized content based on your assessment results.
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="codicon codicon-symbol-keyword"></i> Vocabulary & Questions</h3>
+                    <div id="words_detail" class="output-text" style="padding: 12px; line-height: 1.8;">
                         No vocabulary loaded yet
                     </div>
                 </div>
+
                 <div class="card">
                     <h3><i class="codicon codicon-whole-word"></i> Practice Sentences</h3>
-                    <div id="sentences_detail" class="output-text">
+                    <div id="sentences_detail" class="output-text" style="padding: 12px; line-height: 1.8;">
                         No sentences loaded yet
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="codicon codicon-play-circle"></i> Interactive Practice</h3>
+                    <div id="lesson-practice" class="lesson-practice">
+                        <div id="practice-header"></div>
+                        <div id="exercise-area">
+                            <p class="output-text">Generate today's lesson and click "Start Practice" to begin
+                                practicing here.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -723,6 +748,7 @@
 
     <script src="/static/app.js"></script>
     <script src="/static/plots.js"></script>
+    <script src="/static/lessons.js"></script>
 </body>
 
 </html>
