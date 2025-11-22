@@ -212,7 +212,7 @@ Arts: {user_input}
 
 Antwoord als patiënt (kort en natuurlijk in Nederlands):"""
 
-    response = try_generate(system_prompt, user_prompt, 300)
+    response = try_generate(system_prompt, user_prompt, 500)
     return response if response else "Ik begrijp het niet helemaal. Kunt u het anders uitleggen?"
 
 
@@ -237,7 +237,7 @@ Arts zegt: "{user_input}"
 
 Geef feedback:"""
 
-    raw = try_generate(system_prompt, user_prompt, 450)
+    raw = try_generate(system_prompt, user_prompt, 600)
 
     if not raw:
         return {

@@ -42,7 +42,7 @@ class Config:
 
     # Assessment Settings
     MAX_CONVERSATION_HISTORY: int = 10
-    ASSESSMENT_TIMEOUT: float = 15.0
+    ASSESSMENT_TIMEOUT: float = 40.0
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

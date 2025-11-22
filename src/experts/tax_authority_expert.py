@@ -92,7 +92,7 @@ def try_generate(system_prompt: str, user_input: str, scenario: str) -> str:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_input}
                 ],
-                "max_tokens": 200,
+                "max_tokens": 400,
                 "temperature": 0.5
             }
 
@@ -105,7 +105,7 @@ def try_generate(system_prompt: str, user_input: str, scenario: str) -> str:
                 HF_API_URL,
                 json=payload,
                 headers=headers,
-                timeout=10
+                timeout=40
             )
 
             if response.status_code == 200:

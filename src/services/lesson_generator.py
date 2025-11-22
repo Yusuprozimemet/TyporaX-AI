@@ -267,7 +267,7 @@ class LessonGenerator:
                 self.api_url,
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=60
             )
             response.raise_for_status()
 
@@ -711,8 +711,12 @@ def generate_lesson_for_user(user_id: str, language: str = "dutch", expert: str 
     assessments = []
 
     if assessment_file.exists():
-        with open(assessment_file, "r", encoding="utf-8") as f:
-            assessments = json.load(f)
+        try:
+            with open(assessment_file, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                assessments = json.loads(content) if content else []
+        except (json.JSONDecodeError, IOError):
+            assessments = []
 
     # Generate lesson
     lesson = generator.generate_lesson_plan(

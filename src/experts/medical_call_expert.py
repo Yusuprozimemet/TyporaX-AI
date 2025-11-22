@@ -82,14 +82,14 @@ class MedicalCallExpert:
                 payload = {
                     "model": DEFAULT_MODEL or FALLBACK_MODEL,
                     "messages": messages,
-                    "max_tokens": 200,
+                    "max_tokens": 400,
                     "temperature": 0.6
                 }
 
                 headers = {"Authorization": f"Bearer {HF_TOKEN}",
                            "Content-Type": "application/json"}
 
-                with httpx.Client(timeout=15.0) as client:
+                with httpx.Client(timeout=40.0) as client:
                     resp = client.post(
                         HF_API_URL, json=payload, headers=headers)
                     resp.raise_for_status()

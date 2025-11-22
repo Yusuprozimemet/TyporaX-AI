@@ -483,8 +483,12 @@ class AssessmentTracker:
     def _append_to_assessments_file(self, assessment: Dict):
         """Append to main assessments file (backward compatibility)"""
         if self.assessments_file.exists():
-            with open(self.assessments_file, "r", encoding="utf-8") as f:
-                assessments = json.load(f)
+            try:
+                with open(self.assessments_file, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    assessments = json.loads(content) if content else []
+            except (json.JSONDecodeError, IOError):
+                assessments = []
         else:
             assessments = []
 

@@ -123,18 +123,27 @@ async def generate_lesson(
         assessments = []
         if os.path.exists(assessments_path):
             try:
-                with open(assessments_path, "r") as f:
-                    assessments = json.load(f)
-                    if not isinstance(assessments, list):
-                        assessments = [assessments] if isinstance(
-                            assessments, dict) else []
-                logger.info(
-                    f"✓ Loaded {len(assessments)} assessment(s) for user {user_id}")
+                with open(assessments_path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    # Handle empty files gracefully
+                    if content:
+                        assessments = json.loads(content)
+                        if not isinstance(assessments, list):
+                            assessments = [assessments] if isinstance(
+                                assessments, dict) else []
+                        logger.info(
+                            f"✓ Loaded {len(assessments)} assessment(s) for user {user_id}")
+                    else:
+                        logger.info(
+                            f"Assessment file for user {user_id} is empty - using default analysis")
+            except json.JSONDecodeError as e:
+                logger.warning(
+                    f"Invalid JSON in assessments for {user_id}: {e} - using default analysis")
             except Exception as e:
                 logger.warning(
-                    f"Could not load assessments for {user_id}: {e}")
+                    f"Could not load assessments for {user_id}: {e} - using default analysis")
         else:
-            logger.warning(
+            logger.debug(
                 f"No assessments.json found for user {user_id} at {assessments_path}")
 
         lesson = generator.generate_lesson_plan(

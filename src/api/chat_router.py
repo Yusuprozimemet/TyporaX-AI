@@ -103,7 +103,7 @@ async def generate_language_coach_response(message: str, conversation_history: L
 
             headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(HF_API_URL, json=payload, headers=headers)
                 response.raise_for_status()
 
@@ -223,19 +223,35 @@ async def chat_endpoint(chat_data: ChatMessage):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message}
             ],
-            "max_tokens": 150,
+            "max_tokens": 500,
             "temperature": 0.7,
             "stream": False
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(HF_API_URL, headers=headers, json=payload, timeout=30.0)
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(HF_API_URL, headers=headers, json=payload)
 
             if response.status_code == 200:
                 result = response.json()
                 if "choices" in result and len(result["choices"]) > 0:
                     assistant_response = result["choices"][0]["message"]["content"].strip(
                     )
+
+                    # Validate response is complete (not cut off mid-sentence)
+                    if not assistant_response.endswith(('.', '!', '?', ':', ';')):
+                        # Response likely truncated, add completion indicator
+                        logger.warning(
+                            f"Response may be truncated, missing sentence ending")
+                        # Try to complete the response gracefully
+                        last_period = max(
+                            assistant_response.rfind('.'),
+                            assistant_response.rfind('!'),
+                            assistant_response.rfind('?'),
+                            assistant_response.rfind(':'),
+                            assistant_response.rfind(';')
+                        )
+                        if last_period > 0:
+                            assistant_response = assistant_response[:last_period + 1]
 
                     # Clean the response for better audio generation
                     cleaned_response = clean_response_text(assistant_response)

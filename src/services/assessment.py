@@ -281,7 +281,7 @@ Houd het kort en praktisch."""
             for model in [self.default_model, self.fallback_model]:
                 try:
                     payload["model"] = model
-                    async with httpx.AsyncClient(timeout=20.0) as client:
+                    async with httpx.AsyncClient(timeout=40.0) as client:
                         response = await client.post(self.api_url, json=payload, headers=headers)
                         response.raise_for_status()
 
@@ -502,7 +502,7 @@ Houd het kort en praktisch."""
             payload = {
                 "model": self.default_model,
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 400,
+                "max_tokens": 600,
                 "temperature": 0.6
             }
 
@@ -513,7 +513,7 @@ Houd het kort en praktisch."""
             for model in [self.default_model, self.fallback_model]:
                 try:
                     payload["model"] = model
-                    async with httpx.AsyncClient(timeout=15.0) as client:
+                    async with httpx.AsyncClient(timeout=40.0) as client:
                         response = await client.post(self.api_url, json=payload, headers=headers)
                         response.raise_for_status()
 
@@ -554,8 +554,12 @@ Houd het kort en praktisch."""
             progress_file = f"{user_dir}/conversation_progress.json"
 
             if os.path.exists(progress_file):
-                with open(progress_file, "r", encoding="utf-8") as f:
-                    historical_data = json.load(f)
+                try:
+                    with open(progress_file, "r", encoding="utf-8") as f:
+                        content = f.read().strip()
+                        historical_data = json.loads(content) if content else {"sessions": [], "total_messages": 0, "improvement_trend": "stable"}
+                except (json.JSONDecodeError, IOError):
+                    historical_data = {"sessions": [], "total_messages": 0, "improvement_trend": "stable"}
             else:
                 historical_data = {
                     "sessions": [], "total_messages": 0, "improvement_trend": "stable"}
@@ -908,8 +912,12 @@ async def save_assessment_data(user_id: str, assessment: Dict):
 
         # Load existing assessments
         if os.path.exists(assessments_file):
-            with open(assessments_file, "r", encoding="utf-8") as f:
-                assessments = json.load(f)
+            try:
+                with open(assessments_file, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    assessments = json.loads(content) if content else []
+            except (json.JSONDecodeError, IOError):
+                assessments = []
         else:
             assessments = []
 

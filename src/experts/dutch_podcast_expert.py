@@ -427,7 +427,7 @@ class DutchPodcastConversation:
         payload = {
             "model": model,
             "messages": messages,
-            "max_tokens": 120,  # Allow slightly longer responses for better content
+            "max_tokens": 250,  # Allow longer responses for better content
             "temperature": 0.8,  # More creative for dynamic responses
             "top_p": 0.9
         }
@@ -435,7 +435,7 @@ class DutchPodcastConversation:
         headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
         try:
-            async with httpx.AsyncClient(timeout=25.0) as client:
+            async with httpx.AsyncClient(timeout=40.0) as client:
                 response = await client.post(HF_API_URL, json=payload, headers=headers)
 
                 if response.status_code == 200:
